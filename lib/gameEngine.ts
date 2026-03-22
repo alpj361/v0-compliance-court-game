@@ -3,8 +3,68 @@
 // ── Game State Engine ─────────────────────────────────────────────────────────
 // All game state managed via useReducer. No external dependencies.
 
-import { useReducer, useCallback } from 'react'
+import { useReducer, useCallback, useEffect } from 'react'
 import type { Case, Scene, DialogueLine } from '@/lib/gameData'
+import { CASES } from '@/lib/gameData'
+
+const SAVE_KEY = 'compliance-court-save-v1'
+
+// ── Serialization helpers (Set is not JSON-serializable) ──────────────────────
+function serializeState(s: GameState): object {
+  return {
+    screen: s.screen,
+    activeCaseId: s.activeCase?.id ?? null,
+    currentSceneId: s.currentSceneId,
+    currentDialogueIndex: s.currentDialogueIndex,
+    credibility: s.credibility,
+    evidenceReviewed: Array.from(s.evidenceReviewed),
+    playerName: s.playerName,
+    case1Complete: s.case1Complete,
+    case2Complete: s.case2Complete,
+    selectedArgumentIds: Array.from(s.selectedArgumentIds),
+    argumentSubmitted: s.argumentSubmitted,
+    argumentFeedback: s.argumentFeedback,
+  }
+}
+
+function deserializeState(raw: Record<string, unknown>): Partial<GameState> {
+  const activeCase = raw.activeCaseId
+    ? CASES.find((c) => c.id === raw.activeCaseId) ?? null
+    : null
+  return {
+    screen: (raw.screen as GameState['screen']) ?? 'main-menu',
+    activeCase,
+    currentSceneId: (raw.currentSceneId as string | null) ?? null,
+    currentDialogueIndex: (raw.currentDialogueIndex as number) ?? 0,
+    credibility: (raw.credibility as number) ?? 100,
+    evidenceReviewed: new Set(raw.evidenceReviewed as string[]),
+    playerName: (raw.playerName as string) ?? 'Nicolas',
+    case1Complete: (raw.case1Complete as boolean) ?? false,
+    case2Complete: (raw.case2Complete as boolean) ?? false,
+    selectedArgumentIds: new Set(raw.selectedArgumentIds as string[]),
+    argumentSubmitted: (raw.argumentSubmitted as boolean) ?? false,
+    argumentFeedback: (raw.argumentFeedback as string | null) ?? null,
+    // Transient UI state always resets on resume
+    pendingOverlay: null,
+    isWrongAnswerShaking: false,
+    wrongAnswerMessage: null,
+    isDialogueComplete: false,
+    timedObjectionActive: false,
+    timedObjectionExpired: false,
+  }
+}
+
+function loadSavedState(): GameState {
+  if (typeof window === 'undefined') return initialState
+  try {
+    const raw = localStorage.getItem(SAVE_KEY)
+    if (!raw) return initialState
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    return { ...initialState, ...deserializeState(parsed) }
+  } catch {
+    return initialState
+  }
+}
 
 export type GameScreen =
   | 'main-menu'
@@ -423,6 +483,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, screen: 'case-select', activeCase: null }
 
     case 'GO_TO_MAIN_MENU':
+      try { localStorage.removeItem(SAVE_KEY) } catch { /* ignore */ }
       return { ...initialState }
 
     default:
@@ -431,7 +492,16 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 }
 
 export function useGameEngine() {
-  const [state, dispatch] = useReducer(gameReducer, initialState)
+  const [state, dispatch] = useReducer(gameReducer, initialState, loadSavedState)
+
+  // Persist to localStorage on every state change (skip transient-only changes)
+  useEffect(() => {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(serializeState(state)))
+    } catch {
+      // storage full or unavailable — silently ignore
+    }
+  }, [state])
 
   const currentScene = getCurrentScene(state)
   const currentDialogue = getCurrentDialogue(state)
