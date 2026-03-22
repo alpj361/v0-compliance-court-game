@@ -6,6 +6,7 @@ import { CaseSelect }      from '@/components/game/screens/CaseSelect'
 import { Briefing }        from '@/components/game/screens/Briefing'
 import { Investigation }   from '@/components/game/screens/Investigation'
 import { Trial }           from '@/components/game/screens/Trial'
+import { TrialChat }       from '@/components/game/screens/TrialChat'
 import { ArgumentBuilder } from '@/components/game/screens/ArgumentBuilder'
 import { VerdictScreen }   from '@/components/game/screens/VerdictScreen'
 import { Debrief }         from '@/components/game/screens/Debrief'
@@ -38,8 +39,18 @@ export default function ComplianceCourtPage() {
         <Investigation state={state} dispatch={dispatch} />
       )}
 
-      {state.screen === 'trial' && currentDialogue && (
+      {state.screen === 'trial' && currentDialogue && state.gameMode === 'visual-novel' && (
         <Trial
+          state={state}
+          dispatch={dispatch}
+          currentDialogue={currentDialogue}
+          isChoicePoint={isChoicePoint}
+          clearShake={clearShake}
+        />
+      )}
+
+      {state.screen === 'trial' && currentDialogue && state.gameMode === 'chat' && (
+        <TrialChat
           state={state}
           dispatch={dispatch}
           currentDialogue={currentDialogue}

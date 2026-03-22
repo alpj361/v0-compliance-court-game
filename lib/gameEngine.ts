@@ -18,8 +18,11 @@ export type GameScreen =
 
 export type OverlayType = 'OBJECTION' | 'HOLD IT' | 'TAKE THAT' | null
 
+export type GameMode = 'visual-novel' | 'chat'
+
 export interface GameState {
   screen: GameScreen
+  gameMode: GameMode
   activeCase: Case | null
   currentSceneId: string | null
   currentDialogueIndex: number
@@ -43,6 +46,7 @@ export interface GameState {
 
 const initialState: GameState = {
   screen: 'main-menu',
+  gameMode: 'visual-novel',
   activeCase: null,
   currentSceneId: null,
   currentDialogueIndex: 0,
@@ -64,6 +68,7 @@ const initialState: GameState = {
 
 export type GameAction =
   | { type: 'START_GAME' }
+  | { type: 'SET_GAME_MODE'; payload: GameMode }
   | { type: 'SELECT_CASE'; payload: Case }
   | { type: 'START_INVESTIGATION' }
   | { type: 'REVIEW_EVIDENCE'; payload: string }
@@ -99,6 +104,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'START_GAME':
       return { ...state, screen: 'case-select' }
+
+    case 'SET_GAME_MODE':
+      return { ...state, gameMode: action.payload }
 
     case 'SELECT_CASE':
       return {
