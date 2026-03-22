@@ -26,7 +26,6 @@ export function BankRecordRenderer({ meta, onRead }: BankRecordRendererProps) {
       setVisibleRows((v) => {
         if (v >= meta.rows.length) {
           clearInterval(id)
-          onRead?.()
           return v
         }
         return v + 1
@@ -34,6 +33,13 @@ export function BankRecordRenderer({ meta, onRead }: BankRecordRendererProps) {
     }, 80)
     return () => clearInterval(id)
   }, [opened]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fire onRead after animation completes — outside the interval setter
+  useEffect(() => {
+    if (opened && visibleRows >= meta.rows.length && meta.rows.length > 0) {
+      onRead?.()
+    }
+  }, [opened, visibleRows, meta.rows.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div

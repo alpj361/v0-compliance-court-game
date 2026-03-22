@@ -52,24 +52,29 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
 
   // Timed objection countdown
   useEffect(() => {
-    if (timedObjectionActive) {
-      const seconds = currentDialogue.timedSeconds ?? 10
-      setTimerLeft(seconds)
-      timerRef.current = setInterval(() => {
-        setTimerLeft((t) => {
-          if (t <= 1) {
-            clearInterval(timerRef.current!)
-            dispatch({ type: 'TIMED_OBJECTION_EXPIRE' })
-            return 0
-          }
-          return t - 1
-        })
-      }, 1000)
-    }
+    if (!timedObjectionActive) return
+    const seconds = currentDialogue.timedSeconds ?? 10
+    setTimerLeft(seconds)
+    timerRef.current = setInterval(() => {
+      setTimerLeft((t) => {
+        if (t <= 1) {
+          clearInterval(timerRef.current!)
+          return 0
+        }
+        return t - 1
+      })
+    }, 1000)
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [timedObjectionActive]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Dispatch expire when timer reaches 0
+  useEffect(() => {
+    if (timedObjectionActive && timerLeft === 0) {
+      dispatch({ type: 'TIMED_OBJECTION_EXPIRE' })
+    }
+  }, [timerLeft, timedObjectionActive, dispatch])
 
   const handleChoice = useCallback(
     (choice: ChoiceItem) => {
@@ -88,9 +93,8 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
   )
 
   useEffect(() => {
-    if (isWrongAnswerShaking) {
-      shakeRef.current = setTimeout(() => clearShake(), 600)
-    }
+    if (!isWrongAnswerShaking) return
+    shakeRef.current = setTimeout(() => clearShake(), 600)
     return () => {
       if (shakeRef.current) clearTimeout(shakeRef.current)
     }
@@ -114,7 +118,6 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
 
   return (
     <div className="relative w-full h-screen max-h-screen flex flex-col overflow-hidden bg-court-navy">
-      {/* Dramatic overlay */}
       {pendingOverlay && (
         <DramaticOverlay
           type={pendingOverlay}
@@ -122,7 +125,7 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
         />
       )}
 
-      {/* ── TOP: Courtroom scene ─────────────────────────────────────── */}
+      {/* ── TOP: Courtroom scene (60%) ────────────────────────────── */}
       <div className="relative flex-[6] min-h-0 flex items-end justify-between px-6 pb-4 overflow-hidden">
         <Image
           src="/portraits/courtroom-bg.jpg"
@@ -135,12 +138,12 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
 
         {/* Case HUD — top left */}
         <div className="absolute top-3 left-4 flex flex-col gap-1 z-10">
-          <div className="text-[9px] font-mono tracking-widest uppercase text-court-gold/70">
+          <p className="text-[9px] font-mono tracking-widest uppercase text-court-gold/70">
             {activeCase.title}
-          </div>
-          <div className="text-[9px] font-mono tracking-wider text-muted-foreground">
+          </p>
+          <p className="text-[9px] font-mono tracking-wider text-muted-foreground">
             {activeCase.roleLabel} — {activeCase.jurisdiction}
-          </div>
+          </p>
         </div>
 
         {/* Credibility meter — top right */}
@@ -199,9 +202,9 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
         {/* Court Record panel */}
         {courtRecordOpen && (
           <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 w-full max-w-lg max-h-[55vh] overflow-y-auto bg-court-navy-mid border border-court-gold/40 rounded-sm shadow-xl p-4 flex flex-col gap-3">
-            <div className="text-[10px] font-mono tracking-widest uppercase text-court-gold mb-1 pb-1 border-b border-border">
+            <p className="text-[10px] font-mono tracking-widest uppercase text-court-gold pb-1 border-b border-border">
               Court Record — Evidence
-            </div>
+            </p>
             {activeCase.evidence.map((card) => (
               <EvidenceCard key={card.id} card={card} isReviewed={evidenceReviewed.has(card.id)} />
             ))}
@@ -211,13 +214,7 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
 
       {/* ── Timed objection bar ──────────────────────────────────────── */}
       {(timedObjectionActive || timedObjectionExpired) && (
-        <div
-          className={cn(
-            'absolute left-0 right-0 z-30 flex flex-col items-center gap-1 py-2 px-4',
-            'bg-court-navy/95 border-t-2 border-b border-court-red/60 backdrop-blur-sm',
-            'top-[60vh]',
-          )}
-        >
+        <div className="absolute left-0 right-0 top-[60vh] z-30 flex flex-col items-center gap-1 py-2 px-4 bg-court-navy/95 border-t-2 border-b border-court-red/60">
           <div className="flex items-center gap-2 w-full max-w-md">
             <Timer
               size={13}
@@ -230,21 +227,12 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
               <div
                 className={cn(
                   'h-full rounded-full transition-all duration-1000',
-                  timerPct > 50
-                    ? 'bg-court-gold'
-                    : timerPct > 20
-                      ? 'bg-orange-500'
-                      : 'bg-court-red',
+                  timerPct > 50 ? 'bg-court-gold' : timerPct > 20 ? 'bg-orange-500' : 'bg-court-red',
                 )}
                 style={{ width: `${timerPct}%` }}
               />
             </div>
-            <span
-              className={cn(
-                'text-xs font-mono font-bold tabular-nums',
-                timedObjectionExpired ? 'text-court-red' : 'text-court-gold',
-              )}
-            >
+            <span className={cn('text-xs font-mono font-bold tabular-nums', timedObjectionExpired ? 'text-court-red' : 'text-court-gold')}>
               {timedObjectionExpired ? 'TIME' : `${timerLeft}s`}
             </span>
           </div>
@@ -256,14 +244,13 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
         </div>
       )}
 
-      {/* ── BOTTOM: Dialogue box ────────────────────────────────────── */}
+      {/* ── BOTTOM: Dialogue box (40%) ────────────────────────────── */}
       <div
         className={cn(
           'flex-[4] min-h-0 flex flex-col border-t-2 border-court-gold/60 bg-court-navy z-10',
           isWrongAnswerShaking && 'animate-shake',
         )}
       >
-        {/* Wrong answer feedback banner */}
         {wrongAnswerMessage && (
           <div className="px-5 pt-3 pb-0">
             <div className="text-xs font-sans text-court-white/80 bg-court-red/10 border border-court-red/30 rounded-sm px-3 py-2 leading-relaxed text-pretty">
@@ -272,14 +259,12 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
           </div>
         )}
 
-        {/* Speaker name tag */}
         <div className="px-5 pt-3 pb-1">
           <span className="text-[11px] font-mono tracking-[0.25em] uppercase text-court-gold border border-court-gold/40 px-2 py-0.5 bg-court-gold/10">
             {currentDialogue.speaker}
           </span>
         </div>
 
-        {/* Dialogue text — click to skip or advance */}
         <div
           className="flex-1 px-5 pb-2 overflow-y-auto cursor-pointer select-none"
           onClick={handleDialogueClick}
@@ -294,20 +279,16 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
           </p>
         </div>
 
-        {/* Action row */}
         <div className="border-t border-border px-5 py-3">
           {isChoicePoint && currentDialogue.choices ? (
             <div className="flex flex-col gap-2">
-              {(timedObjectionActive || timedObjectionExpired) ? (
-                <div className="text-[10px] font-mono tracking-widest uppercase text-court-red mb-1 flex items-center gap-1.5">
-                  <Timer size={10} />
-                  Timed objection — respond now
-                </div>
-              ) : (
-                <div className="text-[10px] font-mono tracking-widest uppercase text-court-gold mb-1">
-                  Choose your argument:
-                </div>
-              )}
+              <p className={cn(
+                'text-[10px] font-mono tracking-widest uppercase mb-1 flex items-center gap-1.5',
+                timedObjectionActive || timedObjectionExpired ? 'text-court-red' : 'text-court-gold',
+              )}>
+                {(timedObjectionActive || timedObjectionExpired) && <Timer size={10} />}
+                {timedObjectionActive || timedObjectionExpired ? 'Timed objection — respond now' : 'Choose your argument:'}
+              </p>
               {currentDialogue.choices.map((choice) => (
                 <button
                   key={choice.id}
@@ -326,8 +307,7 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
               ))}
             </div>
           ) : (
-            state.isDialogueComplete &&
-            !timedObjectionActive && (
+            state.isDialogueComplete && !timedObjectionActive && (
               <button
                 onClick={() => dispatch({ type: 'NEXT_DIALOGUE' })}
                 className="flex items-center gap-1.5 text-xs text-court-gold/70 font-mono tracking-wider uppercase hover:text-court-gold transition-colors ml-auto"

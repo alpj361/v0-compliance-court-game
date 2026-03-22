@@ -28,7 +28,6 @@ export function EmailRenderer({ meta, onRead }: EmailRendererProps) {
       setVisibleLines((v) => {
         if (v >= lines.length) {
           clearInterval(id)
-          onRead?.()
           return v
         }
         return v + 1
@@ -36,6 +35,13 @@ export function EmailRenderer({ meta, onRead }: EmailRendererProps) {
     }, 60)
     return () => clearInterval(id)
   }, [opened]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fire onRead after animation completes — outside the interval setter
+  useEffect(() => {
+    if (opened && visibleLines >= lines.length && lines.length > 0) {
+      onRead?.()
+    }
+  }, [opened, visibleLines, lines.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div

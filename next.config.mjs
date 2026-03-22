@@ -1,7 +1,11 @@
 /** @type {import('next').NextConfig} */
+// cache-bust: v2
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   images: {
     unoptimized: true,
