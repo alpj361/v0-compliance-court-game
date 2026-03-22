@@ -1,0 +1,141 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* ── Compliance Court – permanent dark theme ───────────────── */
+:root {
+  /* Core palette */
+  --court-navy:      #0f1923;
+  --court-navy-mid:  #162030;
+  --court-navy-light:#1e2d3f;
+  --court-red:       #c8102e;
+  --court-red-bright:#e8132f;
+  --court-gold:      #d4a017;
+  --court-gold-light:#f0c040;
+  --court-white:     #f0ede6;
+  --court-grey:      #8a9bb0;
+
+  /* Semantic tokens */
+  --background:          var(--court-navy);
+  --foreground:          var(--court-white);
+  --card:                var(--court-navy-mid);
+  --card-foreground:     var(--court-white);
+  --popover:             var(--court-navy-mid);
+  --popover-foreground:  var(--court-white);
+  --primary:             var(--court-red);
+  --primary-foreground:  var(--court-white);
+  --secondary:           var(--court-navy-light);
+  --secondary-foreground:var(--court-white);
+  --muted:               var(--court-navy-light);
+  --muted-foreground:    var(--court-grey);
+  --accent:              var(--court-gold);
+  --accent-foreground:   var(--court-navy);
+  --destructive:         var(--court-red);
+  --destructive-foreground: var(--court-white);
+  --border:              #2a3a4f;
+  --input:               var(--court-navy-light);
+  --ring:                var(--court-gold);
+  --radius: 0.375rem;
+}
+
+@theme inline {
+  --font-sans: var(--font-cinzel-body), 'Georgia', serif;
+  --font-serif: var(--font-cinzel), 'Georgia', serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+
+  /* Court custom colors exposed to Tailwind */
+  --color-court-navy:       #0f1923;
+  --color-court-navy-mid:   #162030;
+  --color-court-navy-light: #1e2d3f;
+  --color-court-red:        #c8102e;
+  --color-court-red-bright: #e8132f;
+  --color-court-gold:       #d4a017;
+  --color-court-gold-light: #f0c040;
+  --color-court-white:      #f0ede6;
+  --color-court-grey:       #8a9bb0;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+}
+
+/* ── Game-specific keyframes ───────────────────────────────── */
+@keyframes objection-slam {
+  0%   { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+  50%  { transform: scale(1.15) rotate(2deg); opacity: 1; }
+  70%  { transform: scale(0.95) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  15%     { transform: translateX(-8px); }
+  30%     { transform: translateX(8px); }
+  45%     { transform: translateX(-6px); }
+  60%     { transform: translateX(6px); }
+  75%     { transform: translateX(-3px); }
+  90%     { transform: translateX(3px); }
+}
+
+@keyframes typewriter-cursor {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0; }
+}
+
+@keyframes portrait-slide-in {
+  from { transform: translateX(-40px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes evidence-flip {
+  0%   { transform: rotateY(90deg) scale(0.8); opacity: 0; }
+  100% { transform: rotateY(0deg)  scale(1);   opacity: 1; }
+}
+
+@keyframes credibility-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(200,16,46,0); }
+  50%     { box-shadow: 0 0 12px 4px rgba(200,16,46,0.7); }
+}
+
+@keyframes flash-bg {
+  0%,100% { background-color: transparent; }
+  30%     { background-color: rgba(255,255,255,0.12); }
+}
+
+.animate-objection-slam  { animation: objection-slam 0.5s cubic-bezier(0.22,1,0.36,1) forwards; }
+.animate-shake           { animation: shake 0.5s ease-in-out; }
+.animate-cursor          { animation: typewriter-cursor 1s step-end infinite; }
+.animate-portrait        { animation: portrait-slide-in 0.35s ease-out forwards; }
+.animate-evidence-flip   { animation: evidence-flip 0.4s ease-out forwards; }
+.animate-credibility-hit { animation: credibility-pulse 0.4s ease-out 2, shake 0.5s ease-in-out; }
+.animate-flash-bg        { animation: flash-bg 0.3s ease-out; }

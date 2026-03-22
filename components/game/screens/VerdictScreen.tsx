@@ -1,0 +1,135 @@
+'use client'
+
+import { cn } from '@/lib/utils'
+import type { GameState, GameAction } from '@/lib/gameEngine'
+import type { VerdictData } from '@/lib/gameData'
+import { Gavel, BookOpen, RotateCcw } from 'lucide-react'
+
+interface VerdictScreenProps {
+  state: GameState
+  dispatch: React.Dispatch<GameAction>
+  verdictData: VerdictData | null | undefined
+}
+
+const OUTCOME_CONFIG = {
+  guilty: {
+    label: 'GUILTY',
+    headerColor: 'text-court-red',
+    bannerBg: 'bg-court-red/10 border-court-red/40',
+    icon: Gavel,
+  },
+  acquitted: {
+    label: 'ACQUITTED',
+    headerColor: 'text-green-400',
+    bannerBg: 'bg-green-900/20 border-green-600/40',
+    icon: Gavel,
+  },
+  lesson: {
+    label: 'CASE CLOSED',
+    headerColor: 'text-court-gold',
+    bannerBg: 'bg-court-gold/10 border-court-gold/40',
+    icon: BookOpen,
+  },
+}
+
+export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenProps) {
+  if (!verdictData) return null
+
+  const config = OUTCOME_CONFIG[verdictData.outcome]
+  const Icon = config.icon
+
+  return (
+    <div className="relative w-full min-h-screen flex flex-col items-center justify-center px-4 py-16 gap-8">
+      {/* Verdict banner */}
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className={cn('p-3 rounded-sm border', config.bannerBg)}>
+          <Icon size={28} className={config.headerColor} />
+        </div>
+        <div className="text-[10px] font-mono tracking-[0.4em] uppercase text-muted-foreground">
+          The Court Rules
+        </div>
+        <h2
+          className={cn(
+            'font-serif text-5xl md:text-6xl font-bold tracking-wide text-balance',
+            config.headerColor
+          )}
+        >
+          {config.label}
+        </h2>
+        <p className="text-court-grey text-sm font-mono">{verdictData.subtitle}</p>
+      </div>
+
+      <div className="w-48 h-px bg-court-gold/40" />
+
+      {/* Lesson card */}
+      <div className="max-w-2xl w-full rounded-sm border border-court-gold/50 bg-court-navy-mid p-6 md:p-8 flex flex-col gap-4">
+        <div className="text-[10px] font-mono tracking-[0.3em] uppercase text-court-gold border-b border-border pb-2 mb-1">
+          Compliance Lesson
+        </div>
+        <h3 className="font-serif text-xl font-bold text-court-white leading-snug">
+          {verdictData.lessonTitle}
+        </h3>
+        <div className="flex flex-col gap-3">
+          {verdictData.lessonText.split('\n\n').map((para, i) => (
+            <p key={i} className="text-foreground/85 leading-relaxed font-sans text-sm">
+              {para}
+            </p>
+          ))}
+        </div>
+        <div className="mt-2 flex items-start gap-2 rounded-sm border border-border bg-court-navy-light px-3 py-2">
+          <BookOpen size={13} className="text-court-gold shrink-0 mt-0.5" />
+          <p className="text-xs font-mono text-muted-foreground">{verdictData.regulationRef}</p>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row items-center gap-4">
+        {state.activeCase?.id === 'case-1' && (
+          <button
+            onClick={() => dispatch({ type: 'GO_TO_DEBRIEF' })}
+            className={cn(
+              'px-8 py-4 font-serif font-bold text-base tracking-widest uppercase',
+              'bg-court-gold text-court-navy border-2 border-court-gold-light',
+              'hover:bg-court-gold-light hover:shadow-[0_0_20px_rgba(212,160,23,0.3)]',
+              'transition-all duration-200 active:scale-95'
+            )}
+          >
+            Continue to Case 2
+          </button>
+        )}
+        {state.activeCase?.id === 'case-2' && (
+          <button
+            onClick={() => dispatch({ type: 'GO_TO_DEBRIEF' })}
+            className={cn(
+              'px-8 py-4 font-serif font-bold text-base tracking-widest uppercase',
+              'bg-court-gold text-court-navy border-2 border-court-gold-light',
+              'hover:bg-court-gold-light hover:shadow-[0_0_20px_rgba(212,160,23,0.3)]',
+              'transition-all duration-200 active:scale-95'
+            )}
+          >
+            Final Debrief
+          </button>
+        )}
+        <button
+          onClick={() => dispatch({ type: 'RESTART_CASE' })}
+          className={cn(
+            'flex items-center gap-2 px-6 py-3 font-mono text-xs tracking-widest uppercase',
+            'border border-border text-muted-foreground',
+            'hover:border-court-grey hover:text-foreground',
+            'transition-all duration-200'
+          )}
+        >
+          <RotateCcw size={13} />
+          Retry Case
+        </button>
+      </div>
+
+      <button
+        onClick={() => dispatch({ type: 'GO_TO_CASE_SELECT' })}
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors font-mono tracking-wider uppercase"
+      >
+        &larr; Case Select
+      </button>
+    </div>
+  )
+}
