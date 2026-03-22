@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import type { GameState, GameAction } from '@/lib/gameEngine'
 import type { DialogueLine } from '@/lib/gameData'
-import { CharacterPortrait } from '@/components/game/CharacterPortrait'
 import { TypewriterText } from '@/components/game/TypewriterText'
 import { CredibilityMeter } from '@/components/game/CredibilityMeter'
 import { EvidenceCard } from '@/components/game/EvidenceCard'
@@ -137,22 +136,6 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
           <BookOpen size={11} />
           Court Record
         </button>
-
-        <div className="z-10">
-          {(currentDialogue.side === 'left' || currentDialogue.side === 'center') ? (
-            <CharacterPortrait portrait={currentDialogue.portrait} side="left" speaker={currentDialogue.speaker} isActive />
-          ) : (
-            <div className="w-[220px] h-[320px] opacity-10 border border-border/20 rounded-sm bg-court-navy-mid/20" />
-          )}
-        </div>
-
-        <div className="z-10">
-          {currentDialogue.side === 'right' ? (
-            <CharacterPortrait portrait={currentDialogue.portrait} side="right" speaker={currentDialogue.speaker} isActive />
-          ) : (
-            <div className="w-[220px] h-[320px] opacity-10 border border-border/20 rounded-sm bg-court-navy-mid/20" />
-          )}
-        </div>
 
         {courtRecordOpen && (
           <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 w-full max-w-lg max-h-[55vh] overflow-y-auto bg-court-navy-mid border border-court-gold/40 rounded-sm shadow-xl p-4 flex flex-col gap-3">

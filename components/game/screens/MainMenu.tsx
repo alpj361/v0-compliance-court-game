@@ -1,14 +1,23 @@
 'use client'
 
 import Image from 'next/image'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import type { GameAction } from '@/lib/gameEngine'
+import type { GameAction, GameMode } from '@/lib/gameEngine'
+import { Layers, MessageSquare } from 'lucide-react'
 
 interface MainMenuProps {
   dispatch: React.Dispatch<GameAction>
 }
 
 export function MainMenu({ dispatch }: MainMenuProps) {
+  const [selectedMode, setSelectedMode] = useState<GameMode>('chat')
+
+  function handleStart() {
+    dispatch({ type: 'SET_GAME_MODE', payload: selectedMode })
+    dispatch({ type: 'START_GAME' })
+  }
+
   return (
     <div className="relative w-full h-full min-h-screen flex flex-col items-center justify-center overflow-hidden">
       {/* Background courtroom image */}
@@ -23,8 +32,8 @@ export function MainMenu({ dispatch }: MainMenuProps) {
         <div className="absolute inset-0 bg-gradient-to-b from-court-navy/60 via-court-navy/40 to-court-navy/90" />
       </div>
 
-      {/* Header badge */}
       <div className="relative z-10 flex flex-col items-center gap-8 px-4 text-center">
+        {/* Title */}
         <div className="flex flex-col items-center gap-2">
           <div className="text-[10px] font-mono tracking-[0.35em] uppercase text-court-gold border border-court-gold/40 px-4 py-1">
             Banking Compliance Training Series
@@ -41,16 +50,48 @@ export function MainMenu({ dispatch }: MainMenuProps) {
           </p>
         </div>
 
-        {/* Tagline */}
         <p className="max-w-md text-court-white/80 text-base leading-relaxed font-sans">
           Two cases. Two sides of the same argument. One pattern you might recognize in yourself.
         </p>
 
+        {/* Mode selector */}
+        <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+          <p className="text-[10px] font-mono tracking-[0.25em] uppercase text-court-grey">Select experience mode</p>
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={() => setSelectedMode('chat')}
+              className={cn(
+                'flex-1 flex flex-col items-center gap-2 px-4 py-4 border rounded-sm transition-all duration-150 text-left',
+                selectedMode === 'chat'
+                  ? 'border-court-gold bg-court-gold/10 text-court-white'
+                  : 'border-border bg-court-navy-light text-muted-foreground hover:border-court-gold/40'
+              )}
+            >
+              <MessageSquare size={18} className={selectedMode === 'chat' ? 'text-court-gold' : 'text-muted-foreground'} />
+              <span className="text-xs font-mono tracking-wider uppercase">Chat Thread</span>
+              <span className="text-[10px] font-sans text-muted-foreground leading-snug text-center">Conversation-style. No portraits.</span>
+            </button>
+            <button
+              onClick={() => setSelectedMode('visual-novel')}
+              className={cn(
+                'flex-1 flex flex-col items-center gap-2 px-4 py-4 border rounded-sm transition-all duration-150 text-left',
+                selectedMode === 'visual-novel'
+                  ? 'border-court-gold bg-court-gold/10 text-court-white'
+                  : 'border-border bg-court-navy-light text-muted-foreground hover:border-court-gold/40'
+              )}
+            >
+              <Layers size={18} className={selectedMode === 'visual-novel' ? 'text-court-gold' : 'text-muted-foreground'} />
+              <span className="text-xs font-mono tracking-wider uppercase">Visual Novel</span>
+              <span className="text-[10px] font-sans text-muted-foreground leading-snug text-center">Courtroom scene with dialogue box.</span>
+            </button>
+          </div>
+        </div>
+
         {/* CTA */}
         <button
-          onClick={() => dispatch({ type: 'START_GAME' })}
+          onClick={handleStart}
           className={cn(
-            'mt-2 px-10 py-4 font-serif font-bold text-lg tracking-widest uppercase',
+            'px-10 py-4 font-serif font-bold text-lg tracking-widest uppercase',
             'bg-court-red border-2 border-court-red-bright text-court-white',
             'hover:bg-court-red-bright hover:shadow-[0_0_24px_rgba(200,16,46,0.5)]',
             'transition-all duration-200 active:scale-95'
@@ -60,14 +101,13 @@ export function MainMenu({ dispatch }: MainMenuProps) {
         </button>
 
         <p className="text-xs text-muted-foreground font-mono">
-          Player: Nicolas — Banking Agent & Law Student
+          Player: Nicolas — Banking Agent &amp; Law Student
         </p>
       </div>
 
-      {/* Bottom rule line */}
       <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10">
         <div className="text-[9px] font-mono tracking-[0.3em] uppercase text-muted-foreground">
-          Press &quot;Begin Trial&quot; to continue
+          Select mode, then press &quot;Begin Trial&quot;
         </div>
       </div>
     </div>
