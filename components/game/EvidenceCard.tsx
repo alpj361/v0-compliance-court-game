@@ -5,10 +5,11 @@
  * based on the evidence's displayType.
  */
 
+import { useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import type { EvidenceCard as EvidenceCardType } from '@/lib/gameData'
-import { EmailRenderer } from '@/components/game/evidence/EmailRenderer'
-import { BankRecordRenderer } from '@/components/game/evidence/BankRecordRenderer'
+import { EmailRenderer } from '@/components/game/evidence/EmailEvidenceRenderer'
+import { BankRecordRenderer } from '@/components/game/evidence/BankEvidenceRenderer'
 import { LegalTextRenderer } from '@/components/game/evidence/LegalTextRenderer'
 import { PaperDocRenderer } from '@/components/game/evidence/PaperDocRenderer'
 import { CoachingLogRenderer } from '@/components/game/evidence/CoachingLogRenderer'
@@ -21,9 +22,9 @@ interface EvidenceCardProps {
 }
 
 export function EvidenceCard({ card, isReviewed, onReview }: EvidenceCardProps) {
-  function handleRead() {
+  const handleRead = useCallback(() => {
     if (!isReviewed) onReview?.(card.id)
-  }
+  }, [card.id, isReviewed, onReview])
 
   return (
     <div className={cn('relative transition-all duration-200', isReviewed ? 'opacity-100' : 'opacity-85')}>

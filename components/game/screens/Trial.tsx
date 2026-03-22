@@ -20,29 +20,15 @@ interface TrialProps {
   clearShake: () => void
 }
 
-type ChoiceItem = NonNullable<DialogueLine['choices']>[number]
-
 export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearShake }: TrialProps) {
-  const {
-    activeCase,
-    pendingOverlay,
-    isWrongAnswerShaking,
-    wrongAnswerMessage,
-    credibility,
-    evidenceReviewed,
-    timedObjectionActive,
-    timedObjectionExpired,
-  } = state
-
+  const { activeCase, pendingOverlay, isWrongAnswerShaking, wrongAnswerMessage, credibility, evidenceReviewed, timedObjectionActive, timedObjectionExpired } = state
   const [courtRecordOpen, setCourtRecordOpen] = useState(false)
   const [skipTyping, setSkipTyping] = useState(false)
   const [timerLeft, setTimerLeft] = useState<number>(10)
-
   const shakeRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevDialogueId = useRef<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Reset skip state when dialogue line changes
   useEffect(() => {
     if (currentDialogue.id !== prevDialogueId.current) {
       setSkipTyping(false)
@@ -50,54 +36,49 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
     }
   }, [currentDialogue.id])
 
-  // Timed objection countdown
   useEffect(() => {
-    if (!timedObjectionActive) return
-    const seconds = currentDialogue.timedSeconds ?? 10
-    setTimerLeft(seconds)
-    timerRef.current = setInterval(() => {
-      setTimerLeft((t) => {
-        if (t <= 1) {
-          clearInterval(timerRef.current!)
-          return 0
-        }
-        return t - 1
-      })
-    }, 1000)
+    if (timedObjectionActive) {
+      const seconds = currentDialogue.timedSeconds ?? 10
+      setTimerLeft(seconds)
+      timerRef.current = setInterval(() => {
+        setTimerLeft((t) => {
+          if (t <= 1) {
+            clearInterval(timerRef.current!)
+            return 0
+          }
+          return t - 1
+        })
+      }, 1000)
+    }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [timedObjectionActive]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [timedObjectionActive]) // eslint-disable-line
 
-  // Dispatch expire when timer reaches 0
   useEffect(() => {
     if (timedObjectionActive && timerLeft === 0) {
       dispatch({ type: 'TIMED_OBJECTION_EXPIRE' })
     }
   }, [timerLeft, timedObjectionActive, dispatch])
 
-  const handleChoice = useCallback(
-    (choice: ChoiceItem) => {
-      if (timerRef.current) clearInterval(timerRef.current)
-      dispatch({
-        type: 'CHOOSE_ANSWER',
-        payload: {
-          isCorrect: choice.isCorrect,
-          penalty: choice.wrongPenalty,
-          feedback: choice.feedback,
-          nextSceneId: choice.nextSceneId,
-        },
-      })
-    },
-    [dispatch],
-  )
+  const handleChoice = useCallback((choice: NonNullable<DialogueLine['choices']>[number]) => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    dispatch({
+      type: 'CHOOSE_ANSWER',
+      payload: {
+        isCorrect: choice.isCorrect,
+        penalty: choice.wrongPenalty,
+        feedback: choice.feedback,
+        nextSceneId: choice.nextSceneId,
+      },
+    })
+  }, [dispatch])
 
   useEffect(() => {
-    if (!isWrongAnswerShaking) return
-    shakeRef.current = setTimeout(() => clearShake(), 600)
-    return () => {
-      if (shakeRef.current) clearTimeout(shakeRef.current)
+    if (isWrongAnswerShaking) {
+      shakeRef.current = setTimeout(() => clearShake(), 600)
     }
+    return () => { if (shakeRef.current) clearTimeout(shakeRef.current) }
   }, [isWrongAnswerShaking, clearShake])
 
   function handleDialogueClick() {
@@ -111,8 +92,6 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
 
   if (!activeCase || !currentDialogue) return null
 
-  const isLeftActive = currentDialogue.side !== 'right'
-  const isRightActive = currentDialogue.side !== 'left'
   const timedSeconds = currentDialogue.timedSeconds ?? 10
   const timerPct = timedObjectionActive ? (timerLeft / timedSeconds) * 100 : 100
 
@@ -125,86 +104,61 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
         />
       )}
 
-      {/* ── TOP: Courtroom scene (60%) ────────────────────────────── */}
+      {/* Courtroom scene — top 60% */}
       <div className="relative flex-[6] min-h-0 flex items-end justify-between px-6 pb-4 overflow-hidden">
         <Image
           src="/portraits/courtroom-bg.jpg"
-          alt="Courtroom background"
+          alt="Courtroom"
           fill
           className="object-cover opacity-25"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-court-navy/50 via-transparent to-court-navy" />
 
-        {/* Case HUD — top left */}
         <div className="absolute top-3 left-4 flex flex-col gap-1 z-10">
-          <p className="text-[9px] font-mono tracking-widest uppercase text-court-gold/70">
-            {activeCase.title}
-          </p>
-          <p className="text-[9px] font-mono tracking-wider text-muted-foreground">
-            {activeCase.roleLabel} — {activeCase.jurisdiction}
-          </p>
+          <div className="text-[9px] font-mono tracking-widest uppercase text-court-gold/70">{activeCase.title}</div>
+          <div className="text-[9px] font-mono tracking-wider text-muted-foreground">{activeCase.roleLabel} — {activeCase.jurisdiction}</div>
         </div>
 
-        {/* Credibility meter — top right */}
         <div className="absolute top-3 right-4 z-10">
           <CredibilityMeter value={credibility} isHit={isWrongAnswerShaking} />
         </div>
 
-        {/* Court Record toggle — top center */}
         <button
-          onClick={() => setCourtRecordOpen((o) => !o)}
+          onClick={() => setCourtRecordOpen(!courtRecordOpen)}
           className={cn(
             'absolute top-3 left-1/2 -translate-x-1/2 z-10',
-            'flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-mono tracking-widest uppercase',
-            'border transition-all duration-150',
+            'flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-mono tracking-widest uppercase border transition-all duration-150',
             courtRecordOpen
               ? 'border-court-gold bg-court-gold/20 text-court-gold'
-              : 'border-border bg-court-navy-mid/80 text-muted-foreground hover:border-court-gold/50 hover:text-court-gold/70',
+              : 'border-border bg-court-navy-mid/80 text-muted-foreground hover:border-court-gold/50 hover:text-court-gold/70'
           )}
         >
           <BookOpen size={11} />
           Court Record
         </button>
 
-        {/* Left character slot */}
         <div className="z-10">
-          {currentDialogue.side === 'left' || currentDialogue.side === 'center' ? (
-            <CharacterPortrait
-              portrait={currentDialogue.portrait}
-              side="left"
-              speaker={currentDialogue.speaker}
-              isActive={isLeftActive}
-            />
+          {(currentDialogue.side === 'left' || currentDialogue.side === 'center') ? (
+            <CharacterPortrait portrait={currentDialogue.portrait} side="left" speaker={currentDialogue.speaker} isActive />
           ) : (
-            <div style={{ width: 220, height: 320 }} className="opacity-20">
-              <div className="w-full h-full border border-border/30 rounded-sm bg-court-navy-mid/30" />
-            </div>
+            <div className="w-[220px] h-[320px] opacity-10 border border-border/20 rounded-sm bg-court-navy-mid/20" />
           )}
         </div>
 
-        {/* Right character slot */}
         <div className="z-10">
           {currentDialogue.side === 'right' ? (
-            <CharacterPortrait
-              portrait={currentDialogue.portrait}
-              side="right"
-              speaker={currentDialogue.speaker}
-              isActive={isRightActive}
-            />
+            <CharacterPortrait portrait={currentDialogue.portrait} side="right" speaker={currentDialogue.speaker} isActive />
           ) : (
-            <div style={{ width: 220, height: 320 }} className="opacity-10">
-              <div className="w-full h-full border border-border/20 rounded-sm bg-court-navy-mid/20" />
-            </div>
+            <div className="w-[220px] h-[320px] opacity-10 border border-border/20 rounded-sm bg-court-navy-mid/20" />
           )}
         </div>
 
-        {/* Court Record panel */}
         {courtRecordOpen && (
           <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 w-full max-w-lg max-h-[55vh] overflow-y-auto bg-court-navy-mid border border-court-gold/40 rounded-sm shadow-xl p-4 flex flex-col gap-3">
-            <p className="text-[10px] font-mono tracking-widest uppercase text-court-gold pb-1 border-b border-border">
+            <div className="text-[10px] font-mono tracking-widest uppercase text-court-gold mb-1 pb-1 border-b border-border">
               Court Record — Evidence
-            </p>
+            </div>
             {activeCase.evidence.map((card) => (
               <EvidenceCard key={card.id} card={card} isReviewed={evidenceReviewed.has(card.id)} />
             ))}
@@ -212,23 +166,14 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
         )}
       </div>
 
-      {/* ── Timed objection bar ──────────────────────────────────────── */}
+      {/* Timed objection bar */}
       {(timedObjectionActive || timedObjectionExpired) && (
-        <div className="absolute left-0 right-0 top-[60vh] z-30 flex flex-col items-center gap-1 py-2 px-4 bg-court-navy/95 border-t-2 border-b border-court-red/60">
+        <div className="flex flex-col items-center gap-1 py-2 px-4 bg-court-navy/95 border-t-2 border-b border-court-red/60 z-10">
           <div className="flex items-center gap-2 w-full max-w-md">
-            <Timer
-              size={13}
-              className={cn(
-                'shrink-0',
-                timedObjectionExpired ? 'text-court-red' : 'text-court-gold animate-pulse',
-              )}
-            />
+            <Timer size={13} className={cn('shrink-0', timedObjectionExpired ? 'text-court-red' : 'text-court-gold animate-pulse')} />
             <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
               <div
-                className={cn(
-                  'h-full rounded-full transition-all duration-1000',
-                  timerPct > 50 ? 'bg-court-gold' : timerPct > 20 ? 'bg-orange-500' : 'bg-court-red',
-                )}
+                className={cn('h-full rounded-full transition-all duration-1000', timerPct > 50 ? 'bg-court-gold' : timerPct > 20 ? 'bg-orange-500' : 'bg-court-red')}
                 style={{ width: `${timerPct}%` }}
               />
             </div>
@@ -237,18 +182,16 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
             </span>
           </div>
           {!timedObjectionExpired && (
-            <p className="text-[10px] font-mono text-court-gold/60 tracking-widest uppercase">
-              Respond to the objection — time is running
-            </p>
+            <p className="text-[10px] font-mono text-court-gold/60 tracking-widest uppercase">Respond to the objection</p>
           )}
         </div>
       )}
 
-      {/* ── BOTTOM: Dialogue box (40%) ────────────────────────────── */}
+      {/* Dialogue box — bottom 40% */}
       <div
         className={cn(
           'flex-[4] min-h-0 flex flex-col border-t-2 border-court-gold/60 bg-court-navy z-10',
-          isWrongAnswerShaking && 'animate-shake',
+          isWrongAnswerShaking && 'animate-shake'
         )}
       >
         {wrongAnswerMessage && (
@@ -265,10 +208,7 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
           </span>
         </div>
 
-        <div
-          className="flex-1 px-5 pb-2 overflow-y-auto cursor-pointer select-none"
-          onClick={handleDialogueClick}
-        >
+        <div className="flex-1 px-5 pb-2 overflow-y-auto cursor-pointer select-none" onClick={handleDialogueClick}>
           <p className="text-base md:text-lg font-sans leading-relaxed text-court-white/95 text-pretty">
             <TypewriterText
               text={currentDialogue.text}
@@ -282,23 +222,18 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
         <div className="border-t border-border px-5 py-3">
           {isChoicePoint && currentDialogue.choices ? (
             <div className="flex flex-col gap-2">
-              <p className={cn(
-                'text-[10px] font-mono tracking-widest uppercase mb-1 flex items-center gap-1.5',
-                timedObjectionActive || timedObjectionExpired ? 'text-court-red' : 'text-court-gold',
-              )}>
-                {(timedObjectionActive || timedObjectionExpired) && <Timer size={10} />}
-                {timedObjectionActive || timedObjectionExpired ? 'Timed objection — respond now' : 'Choose your argument:'}
-              </p>
+              <div className="text-[10px] font-mono tracking-widest uppercase text-court-gold mb-1">
+                {timedObjectionActive ? 'OBJECTION — respond now:' : 'Choose your argument:'}
+              </div>
               {currentDialogue.choices.map((choice) => (
                 <button
                   key={choice.id}
                   onClick={() => handleChoice(choice)}
                   className={cn(
-                    'w-full text-left px-4 py-3 text-sm font-sans leading-snug',
-                    'border rounded-sm transition-all duration-150',
+                    'w-full text-left px-4 py-3 text-sm font-sans leading-snug border rounded-sm transition-all duration-150',
                     'border-border bg-court-navy-light text-foreground/90',
                     'hover:border-court-gold/60 hover:bg-court-navy-mid hover:text-court-white',
-                    'active:scale-[0.99] focus:outline-none focus:ring-1 focus:ring-court-gold/50',
+                    'active:scale-[0.99] focus:outline-none focus:ring-1 focus:ring-court-gold/50'
                   )}
                 >
                   <ChevronRight size={12} className="inline mr-1.5 text-court-gold/60 shrink-0" />
