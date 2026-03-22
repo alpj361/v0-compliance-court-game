@@ -1,13 +1,14 @@
 'use client'
 
 import { useGameEngine } from '@/lib/gameEngine'
-import { MainMenu }       from '@/components/game/screens/MainMenu'
-import { CaseSelect }     from '@/components/game/screens/CaseSelect'
-import { Briefing }       from '@/components/game/screens/Briefing'
-import { Investigation }  from '@/components/game/screens/Investigation'
-import { Trial }          from '@/components/game/screens/Trial'
-import { VerdictScreen }  from '@/components/game/screens/VerdictScreen'
-import { Debrief }        from '@/components/game/screens/Debrief'
+import { MainMenu }        from '@/components/game/screens/MainMenu'
+import { CaseSelect }      from '@/components/game/screens/CaseSelect'
+import { Briefing }        from '@/components/game/screens/Briefing'
+import { Investigation }   from '@/components/game/screens/Investigation'
+import { Trial }           from '@/components/game/screens/Trial'
+import { ArgumentBuilder } from '@/components/game/screens/ArgumentBuilder'
+import { VerdictScreen }   from '@/components/game/screens/VerdictScreen'
+import { Debrief }         from '@/components/game/screens/Debrief'
 
 export default function ComplianceCourtPage() {
   const {
@@ -45,6 +46,10 @@ export default function ComplianceCourtPage() {
           isChoicePoint={isChoicePoint}
           clearShake={clearShake}
         />
+      )}
+
+      {state.screen === 'argument-builder' && (
+        <ArgumentBuilder state={state} dispatch={dispatch} />
       )}
 
       {state.screen === 'verdict' && (
