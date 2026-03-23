@@ -3,8 +3,152 @@
 // ── Game State Engine ─────────────────────────────────────────────────────────
 // All game state managed via useReducer. No external dependencies.
 
-import { useReducer, useCallback } from 'react'
+import { useReducer, useCallback, useEffect, useState } from 'react'
 import type { Case, Scene, DialogueLine } from '@/lib/gameData'
+import { case1, case2 } from '@/lib/gameData'
+
+// ── Persistence ───────────────────────────────────────────────────────────────
+
+const CASES_MAP: Record<string, Case> = { 'case-1': case1, 'case-2': case2 }
+const SAVE_KEY  = 'compliance-court-v1'
+const SAVE_VER  = 2
+
+interface RawSave {
+  ver: number
+  savedAt: number
+  activeCaseId: string | null
+  screen: string
+  gameMode: string
+  currentSceneId: string | null
+  currentDialogueIndex: number
+  credibility: number
+  evidenceReviewed: string[]
+  isDialogueComplete: boolean
+  playerName: string
+  case1Complete: boolean
+  case2Complete: boolean
+  trialTimerActive: boolean
+  trialTimeLeft: number
+  pendingEvidencePresentation: boolean
+  lastPresentedEvidenceId: string | null
+  selectedArgumentIds: string[]
+  argumentSubmitted: boolean
+  argumentFeedback: string | null
+}
+
+function persistSave(state: GameState): void {
+  if (typeof window === 'undefined') return
+  try {
+    const raw: RawSave = {
+      ver: SAVE_VER,
+      savedAt: Date.now(),
+      activeCaseId: state.activeCase?.id ?? null,
+      screen: state.screen,
+      gameMode: state.gameMode,
+      currentSceneId: state.currentSceneId,
+      currentDialogueIndex: state.currentDialogueIndex,
+      credibility: state.credibility,
+      evidenceReviewed: [...state.evidenceReviewed],
+      isDialogueComplete: state.isDialogueComplete,
+      playerName: state.playerName,
+      case1Complete: state.case1Complete,
+      case2Complete: state.case2Complete,
+      trialTimerActive: state.trialTimerActive,
+      trialTimeLeft: state.trialTimeLeft,
+      pendingEvidencePresentation: state.pendingEvidencePresentation,
+      lastPresentedEvidenceId: state.lastPresentedEvidenceId,
+      selectedArgumentIds: [...state.selectedArgumentIds],
+      argumentSubmitted: state.argumentSubmitted,
+      argumentFeedback: state.argumentFeedback,
+    }
+    localStorage.setItem(SAVE_KEY, JSON.stringify(raw))
+  } catch { /* storage unavailable */ }
+}
+
+function clearPersistSave(): void {
+  if (typeof window === 'undefined') return
+  try { localStorage.removeItem(SAVE_KEY) } catch { /* noop */ }
+}
+
+/** Returns null if no valid save exists. Adjusts trial timer for elapsed time. */
+function loadPersistSave(): Partial<GameState> | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(SAVE_KEY)
+    if (!raw) return null
+    const data: RawSave = JSON.parse(raw)
+    if (data.ver !== SAVE_VER) { clearPersistSave(); return null }
+
+    // Screen guards — don't restore truly transient or completed states
+    const screen = data.screen as GameState['screen']
+    if (screen === 'main-menu') return null
+
+    const activeCase = data.activeCaseId ? (CASES_MAP[data.activeCaseId] ?? null) : null
+
+    // Validate currentSceneId exists in the case
+    const validSceneId =
+      activeCase && data.currentSceneId && activeCase.scenes[data.currentSceneId]
+        ? data.currentSceneId
+        : (activeCase?.firstSceneId ?? null)
+
+    // Adjust trial timer for elapsed wall-clock time
+    let trialTimerActive = data.trialTimerActive
+    let trialTimeLeft = data.trialTimeLeft
+    let adjustedScreen: GameState['screen'] = screen
+    let adjustedSceneId: string | null = validSceneId
+
+    if (trialTimerActive && trialTimeLeft > 0) {
+      const elapsed = Math.floor((Date.now() - data.savedAt) / 1000)
+      trialTimeLeft = trialTimeLeft - elapsed
+      if (trialTimeLeft <= 0) {
+        // Timer expired while away — go straight to postponed verdict
+        trialTimerActive = false
+        trialTimeLeft = 0
+        adjustedScreen = 'verdict'
+        adjustedSceneId = activeCase?.postponedSceneId ?? null
+      }
+    }
+
+    return {
+      screen: adjustedScreen,
+      gameMode: data.gameMode as GameState['gameMode'],
+      activeCase,
+      currentSceneId: adjustedSceneId,
+      currentDialogueIndex: data.currentDialogueIndex,
+      credibility: data.credibility,
+      evidenceReviewed: new Set(data.evidenceReviewed),
+      pendingOverlay: null,
+      isWrongAnswerShaking: false,
+      wrongAnswerMessage: null,
+      isDialogueComplete: data.isDialogueComplete,
+      playerName: data.playerName,
+      case1Complete: data.case1Complete,
+      case2Complete: data.case2Complete,
+      timedObjectionActive: false,
+      timedObjectionExpired: false,
+      trialTimerActive,
+      trialTimeLeft,
+      pendingEvidencePresentation: data.pendingEvidencePresentation,
+      lastPresentedEvidenceId: data.lastPresentedEvidenceId,
+      evidencePresentFeedback: null,
+      selectedArgumentIds: new Set(data.selectedArgumentIds),
+      argumentSubmitted: data.argumentSubmitted,
+      argumentFeedback: data.argumentFeedback,
+    }
+  } catch { return null }
+}
+
+function checkHasSavedGame(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const raw = localStorage.getItem(SAVE_KEY)
+    if (!raw) return false
+    const data = JSON.parse(raw)
+    return data.ver === SAVE_VER && data.screen !== 'main-menu'
+  } catch { return false }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export type GameScreen =
   | 'main-menu'
@@ -105,6 +249,7 @@ export type GameAction =
   | { type: 'RESTART_CASE' }
   | { type: 'GO_TO_CASE_SELECT' }
   | { type: 'GO_TO_MAIN_MENU' }
+  | { type: 'LOAD_SAVED_STATE'; payload: Partial<GameState> }
 
 function getCurrentScene(state: GameState): Scene | null {
   if (!state.activeCase || !state.currentSceneId) return null
@@ -613,6 +758,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'GO_TO_MAIN_MENU':
       return { ...initialState }
 
+    case 'LOAD_SAVED_STATE':
+      return { ...initialState, ...action.payload }
+
     default:
       return state
   }
@@ -620,6 +768,40 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
 export function useGameEngine() {
   const [state, dispatch] = useReducer(gameReducer, initialState)
+  const [hasSavedGame, setHasSavedGame] = useState(false)
+
+  // On mount (client only): detect existing save
+  useEffect(() => {
+    setHasSavedGame(checkHasSavedGame())
+  }, [])
+
+  // Auto-save on every state change, except when on the main menu
+  useEffect(() => {
+    if (state.screen === 'main-menu') return
+    persistSave(state)
+  }, [state])
+
+  // Clear save when going to main menu or debrief (session ended)
+  useEffect(() => {
+    if (state.screen === 'debrief') {
+      clearPersistSave()
+      setHasSavedGame(false)
+    }
+  }, [state.screen])
+
+  const continueGame = useCallback(() => {
+    const saved = loadPersistSave()
+    if (!saved) return
+    dispatch({ type: 'LOAD_SAVED_STATE', payload: saved })
+    setHasSavedGame(false)
+  }, [])
+
+  const startNewGame = useCallback((mode: GameState['gameMode']) => {
+    clearPersistSave()
+    setHasSavedGame(false)
+    dispatch({ type: 'SET_GAME_MODE', payload: mode })
+    dispatch({ type: 'START_GAME' })
+  }, [])
 
   const currentScene = getCurrentScene(state)
   const currentDialogue = getCurrentDialogue(state)
@@ -646,6 +828,9 @@ export function useGameEngine() {
   return {
     state,
     dispatch,
+    hasSavedGame,
+    continueGame,
+    startNewGame,
     currentScene,
     currentDialogue,
     isChoicePoint,

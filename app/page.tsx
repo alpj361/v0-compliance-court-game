@@ -15,6 +15,9 @@ export default function ComplianceCourtPage() {
   const {
     state,
     dispatch,
+    hasSavedGame,
+    continueGame,
+    startNewGame,
     currentDialogue,
     isChoicePoint,
     verdictData,
@@ -24,7 +27,11 @@ export default function ComplianceCourtPage() {
   return (
     <main className="bg-background text-foreground min-h-screen font-sans">
       {state.screen === 'main-menu' && (
-        <MainMenu dispatch={dispatch} />
+        <MainMenu
+          hasSavedGame={hasSavedGame}
+          onContinue={continueGame}
+          onNewGame={startNewGame}
+        />
       )}
 
       {state.screen === 'case-select' && (
