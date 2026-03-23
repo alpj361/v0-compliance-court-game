@@ -33,11 +33,11 @@ export function MainMenu({ currentGame, hasSavedGame, onContinue, onNewGame, onO
 
   return (
     <div className="relative w-full h-full min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* Background courtroom image */}
+      {/* Background image */}
       <div className="absolute inset-0">
         <Image
-          src="/portraits/courtroom-bg.jpg"
-          alt="Courtroom"
+          src={isOTF ? '/portraits/football-locker-room-bg.jpg' : '/portraits/courtroom-bg.jpg'}
+          alt={isOTF ? 'Football locker room' : 'Courtroom'}
           fill
           className="object-cover opacity-30"
           priority

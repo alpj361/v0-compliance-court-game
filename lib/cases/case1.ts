@@ -1,6 +1,7 @@
 // ── CASE 1: EL EXPEDIENTE PÉREZ ──────────────────────────────────────────────
 // Sala de lo Penal — Guatemala City, Guatemala
 // Nicolas plays: The Prosecutor
+// Last updated: credibility-gated verdict scenes + s1-closing-gate
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Case } from '@/lib/types'
@@ -441,6 +442,12 @@ export const case1: Case = {
 
     's1-verdict-scene': {
       id: 's1-verdict-scene',
+      // The judge already speaks the verdict aloud in this scene's dialogues.
+      // bypassVerdictRouting prevents the engine from re-routing via credibility-based
+      // verdictRoutes, so the player always lands on 's1-verdict' (CULPABLE) here.
+      // The credibility-gated routes (perfect/good/bad/null) are only reachable when
+      // the player fails to reach this scene (wrong answer branches → navigateToVerdict).
+      bypassVerdictRouting: true,
       dialogues: [
         {
           id: 'd1-19',
@@ -766,6 +773,121 @@ export const case1: Case = {
 
     // ── Verdict scenes (credibilidad-gated) ────────────────────────────────
 
+    // Credibility router: wrong-c5 branches arrive here after Nicolas fumbles
+    // the final argument. The judge's reaction and final verdict depend on how
+    // much credibility Nicolas accumulated over the whole trial.
+    's1-closing-gate': {
+      id: 's1-closing-gate',
+      dialogues: [],
+      isCredibilityRouterScene: true,
+      credibilityRoutes: [
+        { minCredibility: 65, sceneId: 's1-verdict-scene-high' },
+        { minCredibility: 35, sceneId: 's1-verdict-scene-mid' },
+        { minCredibility: 0,  sceneId: 's1-verdict-scene-low' },
+      ],
+    },
+
+    // High credibility path (≥65): judge convinced despite the weak closing,
+    // evidence already built a solid case — CULPABLE but with a note of doubt
+    // about the final argument.
+    's1-verdict-scene-high': {
+      id: 's1-verdict-scene-high',
+      bypassVerdictRouting: true,
+      dialogues: [
+        {
+          id: 'd1-vsh-01',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'El tribunal ha analizado el expediente completo. El argumento final de la fiscalía no fue el más sólido — pero la evidencia acumulada a lo largo de este juicio habla por sí sola.',
+        },
+        {
+          id: 'd1-vsh-02',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'El Decreto 67-2001, el protocolo firmado, el correo leído y no respondido, los antecedentes documentados — en conjunto, prueban más allá de toda duda razonable que el señor Pérez conocía su obligación y la ignoró. El tribunal declara culpable al acusado.',
+        },
+        {
+          id: 'd1-vsh-03',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-rattled',
+          side: 'right',
+          text: '...',
+        },
+      ],
+      nextSceneId: 's1-verdict-perfect',
+    },
+
+    // Mid credibility path (35-64): judge acknowledges the case but notes the
+    // argumentative gaps — CULPABLE with reduced sentence, Fuentes wins partial points.
+    's1-verdict-scene-mid': {
+      id: 's1-verdict-scene-mid',
+      bypassVerdictRouting: true,
+      dialogues: [
+        {
+          id: 'd1-vsm-01',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'La fiscalía estableció los hechos básicos, pero hubo momentos en este juicio donde el argumento fue débil y la defensa lo capitalizó. El tribunal no puede ignorar esas grietas.',
+        },
+        {
+          id: 'd1-vsm-02',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'Dicho esto: el paso obligatorio no fue completado. El señor Pérez firmó el protocolo. Fue advertido. El tribunal declara culpable al acusado — con atenuantes en consideración a los argumentos de la defensa respecto al contexto institucional.',
+        },
+        {
+          id: 'd1-vsm-03',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'El tribunal ha reconocido lo que yo argumenté desde el inicio. Mi cliente acepta la resolución.',
+        },
+      ],
+      nextSceneId: 's1-verdict-good',
+    },
+
+    // Low credibility path (<35): judge is skeptical, the case barely held together,
+    // the argument was so weak Fuentes almost won — ABSUELTO.
+    's1-verdict-scene-low': {
+      id: 's1-verdict-scene-low',
+      bypassVerdictRouting: true,
+      dialogues: [
+        {
+          id: 'd1-vsl-01',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'Este tribunal ha presenciado una presentación fiscal con serias deficiencias. Argumentos concedidos sin necesidad, evidencia presentada en orden incorrecto, silencios en momentos críticos.',
+        },
+        {
+          id: 'd1-vsl-02',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'La fiscalía no logró sostener la carga probatoria con el rigor que esta causa requería, Su Señoría.',
+        },
+        {
+          id: 'd1-vsl-03',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'El tribunal coincide. La evidencia documental existía — pero no fue presentada con suficiente solidez argumental para sustentar una condena. Se declara al acusado Rodrigo Pérez absuelto por insuficiencia probatoria de la fiscalía.',
+        },
+        {
+          id: 'd1-vsl-04',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-confident',
+          side: 'right',
+          text: '...',
+        },
+      ],
+      nextSceneId: 's1-verdict-bad',
+    },
+
     's1-verdict-perfect': {
       id: 's1-verdict-perfect',
       isVerdictScene: true,
@@ -1090,7 +1212,7 @@ export const case1: Case = {
 
     's1-wrong-c5b': {
       id: 's1-wrong-c5b',
-      nextSceneId: 's1-verdict-scene',
+      nextSceneId: 's1-closing-gate',
       dialogues: [
         {
           id: 'd1-w09a',
@@ -1118,7 +1240,7 @@ export const case1: Case = {
 
     's1-wrong-c5c': {
       id: 's1-wrong-c5c',
-      nextSceneId: 's1-verdict-scene',
+      nextSceneId: 's1-closing-gate',
       dialogues: [
         {
           id: 'd1-w10a',

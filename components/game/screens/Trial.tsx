@@ -171,8 +171,8 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
       {/* Courtroom scene — top 60% */}
       <div className="relative flex-[6] min-h-0 flex items-end justify-between px-6 pb-4 overflow-hidden">
         <Image
-          src="/portraits/courtroom-bg.jpg"
-          alt="Courtroom"
+          src={activeCase.gameId === 'on-the-field' ? '/portraits/football-locker-room-bg.jpg' : '/portraits/courtroom-bg.jpg'}
+          alt={activeCase.gameId === 'on-the-field' ? 'Football locker room' : 'Courtroom'}
           fill
           className="object-cover opacity-25"
           priority

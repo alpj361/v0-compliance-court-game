@@ -3,9 +3,10 @@
 /**
  * PaperDocRenderer — renders evidence as a physical paper document.
  * Slight paper texture, signature line, drag-to-read full content.
+ * Lines animate in one-by-one (like a scouting report printing) when opened.
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import type { PaperDocMeta } from '@/lib/gameData'
 import { FileText, ChevronDown, ChevronUp, PenLine } from 'lucide-react'
@@ -18,10 +19,36 @@ interface PaperDocRendererProps {
 
 export function PaperDocRenderer({ meta, isKey, onRead }: PaperDocRendererProps) {
   const [opened, setOpened] = useState(false)
+  const [visibleLines, setVisibleLines] = useState(0)
+
+  const bodyLines = meta.body.split('\n')
+
+  useEffect(() => {
+    if (!opened) {
+      setVisibleLines(0)
+      return
+    }
+    setVisibleLines(0)
+    let current = 0
+    const id = setInterval(() => {
+      current += 1
+      setVisibleLines(current)
+      if (current >= bodyLines.length) {
+        clearInterval(id)
+      }
+    }, 55)
+    return () => clearInterval(id)
+  }, [opened, bodyLines.length])
+
+  // Fire onRead once all lines are visible
+  useEffect(() => {
+    if (opened && visibleLines >= bodyLines.length && bodyLines.length > 0) {
+      onRead?.()
+    }
+  }, [opened, visibleLines, bodyLines.length, onRead])
 
   function handleOpen() {
     setOpened(true)
-    onRead?.()
   }
 
   return (
@@ -77,25 +104,31 @@ export function PaperDocRenderer({ meta, isKey, onRead }: PaperDocRendererProps)
             </p>
           </div>
 
-          {/* Body */}
+          {/* Body — lines animate in one-by-one */}
           <div
             className="px-6 py-5 max-h-64 overflow-y-auto"
             style={{ scrollbarColor: 'rgba(90,74,56,0.3) transparent' }}
           >
-            {meta.body.split('\n').map((line, i) => (
+            {bodyLines.slice(0, visibleLines).map((line, i) => (
               line === ''
                 ? <div key={i} className="h-3" />
-                : <p key={i} className={cn(
-                    'text-sm font-serif text-[#2a1e0e] leading-relaxed text-pretty',
-                    line.match(/^(PASO|INCIDENTE|PASO \d|STEP)/) && 'font-semibold text-[#1a0e00]'
-                  )}>
+                : <p
+                    key={i}
+                    className={cn(
+                      'text-sm font-serif text-[#2a1e0e] leading-relaxed text-pretty transition-opacity duration-150',
+                      line.match(/^(PASO|INCIDENTE|PASO \d|STEP|CLÁUSULA|CONDICIONES|DEMANDA|PREGUNTA|NOTA|HISTORIAL|SALIDA|CONCLUSIÓN|CLUB|RESULTADO)/) && 'font-semibold text-[#1a0e00]'
+                    )}
+                  >
                     {line}
                   </p>
             ))}
+            {visibleLines < bodyLines.length && (
+              <span className="inline-block w-2 h-3 bg-[#8a7a60]/70 animate-pulse mt-1" />
+            )}
           </div>
 
           {/* Signature area */}
-          {meta.signature && (
+          {meta.signature && visibleLines >= bodyLines.length && (
             <div className="px-6 py-4 border-t border-[#c8b89a]/40 bg-[#ece5d0]/30">
               <div className="flex items-end gap-8 flex-wrap">
                 <div>
