@@ -38,6 +38,13 @@ export interface GameState {
   // Timed objection state
   timedObjectionActive: boolean
   timedObjectionExpired: boolean
+  // 15-minute global trial timer
+  trialTimerActive: boolean
+  trialTimeLeft: number   // seconds
+  // Evidence presentation mechanic
+  pendingEvidencePresentation: boolean
+  lastPresentedEvidenceId: string | null
+  evidencePresentFeedback: string | null
   // Argument builder state (Case 2 Ch3)
   selectedArgumentIds: Set<string>
   argumentSubmitted: boolean
@@ -61,6 +68,11 @@ const initialState: GameState = {
   case2Complete: false,
   timedObjectionActive: false,
   timedObjectionExpired: false,
+  trialTimerActive: false,
+  trialTimeLeft: 900,
+  pendingEvidencePresentation: false,
+  lastPresentedEvidenceId: null,
+  evidencePresentFeedback: null,
   selectedArgumentIds: new Set(),
   argumentSubmitted: false,
   argumentFeedback: null,
@@ -75,11 +87,16 @@ export type GameAction =
   | { type: 'START_TRIAL' }
   | { type: 'NEXT_DIALOGUE' }
   | { type: 'DIALOGUE_TYPING_COMPLETE' }
-  | { type: 'CHOOSE_ANSWER'; payload: { isCorrect: boolean; penalty?: number; feedback?: string; nextSceneId?: string } }
+  | { type: 'CHOOSE_ANSWER'; payload: { isCorrect: boolean; penalty?: number; feedback?: string; nextSceneId?: string; credibilityGate?: { minCredibility: number; alternateSceneId: string } } }
   | { type: 'CLEAR_SHAKE' }
   | { type: 'SHOW_OVERLAY'; payload: OverlayType }
   | { type: 'CLEAR_OVERLAY' }
   | { type: 'TIMED_OBJECTION_EXPIRE' }
+  | { type: 'TRIAL_TIMER_EXPIRE' }
+  | { type: 'TICK_TRIAL_TIMER' }
+  | { type: 'PRESENT_EVIDENCE'; payload: string }
+  | { type: 'SKIP_EVIDENCE_PRESENTATION' }
+  | { type: 'CLEAR_EVIDENCE_FEEDBACK' }
   | { type: 'TOGGLE_ARGUMENT_PIECE'; payload: string }
   | { type: 'SUBMIT_ARGUMENT' }
   | { type: 'PROCEED_AFTER_ARGUMENT' }
@@ -92,6 +109,22 @@ export type GameAction =
 function getCurrentScene(state: GameState): Scene | null {
   if (!state.activeCase || !state.currentSceneId) return null
   return state.activeCase.scenes[state.currentSceneId] ?? null
+}
+
+/** Pick the correct verdict scene based on credibility using the case's verdictRoutes */
+function resolveVerdictSceneId(state: GameState, fallbackSceneId?: string): string | null {
+  const routes = state.activeCase?.verdictRoutes
+  if (!routes?.length) return fallbackSceneId ?? null
+  // Routes are sorted descending by minCredibility in data; find first that matches
+  const sorted = [...routes].sort((a, b) => b.minCredibility - a.minCredibility)
+  const match = sorted.find((r) => state.credibility >= r.minCredibility)
+  return match?.sceneId ?? fallbackSceneId ?? null
+}
+
+/** Navigate to verdict screen using credibility-gated routing */
+function navigateToVerdict(state: GameState, fallbackSceneId?: string): GameState {
+  const sceneId = resolveVerdictSceneId(state, fallbackSceneId)
+  return { ...state, screen: 'verdict', currentSceneId: sceneId, trialTimerActive: false }
 }
 
 function getCurrentDialogue(state: GameState): DialogueLine | null {
@@ -121,6 +154,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         pendingOverlay: null,
         timedObjectionActive: false,
         timedObjectionExpired: false,
+        trialTimerActive: false,
+        trialTimeLeft: 900,
+        pendingEvidencePresentation: false,
+        lastPresentedEvidenceId: null,
+        evidencePresentFeedback: null,
         selectedArgumentIds: new Set(),
         argumentSubmitted: false,
         argumentFeedback: null,
@@ -143,6 +181,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         currentSceneId: state.activeCase!.firstSceneId,
         currentDialogueIndex: 0,
         isDialogueComplete: false,
+        trialTimerActive: true,
+        trialTimeLeft: 900,
+        pendingEvidencePresentation: false,
+        lastPresentedEvidenceId: null,
+        evidencePresentFeedback: null,
       }
 
     case 'DIALOGUE_TYPING_COMPLETE': {
@@ -168,6 +211,79 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       }
     }
 
+    case 'TICK_TRIAL_TIMER': {
+      if (!state.trialTimerActive || state.trialTimeLeft <= 0) return state
+      return { ...state, trialTimeLeft: state.trialTimeLeft - 1 }
+    }
+
+    case 'TRIAL_TIMER_EXPIRE': {
+      const postponedSceneId = state.activeCase?.postponedSceneId ?? null
+      return {
+        ...state,
+        trialTimerActive: false,
+        trialTimeLeft: 0,
+        screen: 'verdict',
+        currentSceneId: postponedSceneId,
+      }
+    }
+
+    case 'PRESENT_EVIDENCE': {
+      const scene = getCurrentScene(state)
+      if (!scene?.isEvidencePresentScene) return state
+      const evidenceId = action.payload
+      const isCorrect = scene.correctEvidenceIds?.includes(evidenceId) ?? false
+      const bonus = scene.evidenceBonusCredibility ?? 5
+      const penalty = scene.evidencePenaltyCredibility ?? 8
+      const delta = isCorrect ? bonus : -penalty
+      const newCredibility = Math.max(0, Math.min(100, state.credibility + delta))
+      const feedback = isCorrect
+        ? `+${bonus} Credibilidad — El tribunal toma nota. La evidencia presentada refuerza tu posición.`
+        : `-${penalty} Credibilidad — Fuentes objeta: esa evidencia no es pertinente en este momento. El tribunal lo anota.`
+      const nextSceneId = scene.nextSceneId ?? null
+      const nextScene = nextSceneId ? state.activeCase?.scenes[nextSceneId] : null
+
+      const baseState = {
+        ...state,
+        credibility: newCredibility,
+        pendingEvidencePresentation: false,
+        lastPresentedEvidenceId: evidenceId,
+        evidencePresentFeedback: feedback,
+        isWrongAnswerShaking: !isCorrect,
+      }
+
+      if (!nextSceneId || !nextScene) return baseState
+      if (nextScene.isVerdictScene) return { ...baseState, ...navigateToVerdict(baseState, nextSceneId) }
+      return {
+        ...baseState,
+        currentSceneId: nextSceneId,
+        currentDialogueIndex: 0,
+        isDialogueComplete: false,
+        timedObjectionActive: false,
+        timedObjectionExpired: false,
+      }
+    }
+
+    case 'SKIP_EVIDENCE_PRESENTATION': {
+      const scene = getCurrentScene(state)
+      if (!scene?.isEvidencePresentScene) return state
+      const nextSceneId = scene.nextSceneId ?? null
+      const nextScene = nextSceneId ? state.activeCase?.scenes[nextSceneId] : null
+      const baseState = { ...state, pendingEvidencePresentation: false, evidencePresentFeedback: null }
+      if (!nextSceneId || !nextScene) return baseState
+      if (nextScene.isVerdictScene) return { ...baseState, ...navigateToVerdict(baseState, nextSceneId) }
+      return {
+        ...baseState,
+        currentSceneId: nextSceneId,
+        currentDialogueIndex: 0,
+        isDialogueComplete: false,
+        timedObjectionActive: false,
+        timedObjectionExpired: false,
+      }
+    }
+
+    case 'CLEAR_EVIDENCE_FEEDBACK':
+      return { ...state, evidencePresentFeedback: null, isWrongAnswerShaking: false }
+
     case 'NEXT_DIALOGUE': {
       if (!state.isDialogueComplete) {
         return { ...state, isDialogueComplete: true }
@@ -187,10 +303,20 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
 
+      // Evidence presentation scene — after all dialogues, wait for player to select/skip
+      if (scene.isEvidencePresentScene) {
+        return { ...state, pendingEvidencePresentation: true }
+      }
+
       const dialogue = scene.dialogues[state.currentDialogueIndex]
 
       if (dialogue?.overlay && state.pendingOverlay !== dialogue.overlay) {
-        return { ...state, pendingOverlay: dialogue.overlay, isDialogueComplete: false }
+        return {
+          ...state,
+          pendingOverlay: dialogue.overlay,
+          isDialogueComplete: false,
+          currentDialogueIndex: state.currentDialogueIndex + 1,
+        }
       }
 
       if (state.pendingOverlay) {
@@ -222,13 +348,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
       // Scene finished
       if (scene.isVerdictScene) {
-        return { ...state, screen: 'verdict' }
+        return { ...state, screen: 'verdict', trialTimerActive: false }
       }
 
       if (scene.nextSceneId && state.activeCase?.scenes[scene.nextSceneId]) {
         const nextScene = state.activeCase.scenes[scene.nextSceneId]
         if (nextScene.isVerdictScene) {
-          return { ...state, screen: 'verdict', currentSceneId: scene.nextSceneId }
+          return navigateToVerdict(state, scene.nextSceneId)
         }
         if (nextScene.isArgumentScene) {
           return {
@@ -238,6 +364,17 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             selectedArgumentIds: new Set(),
             argumentSubmitted: false,
             argumentFeedback: null,
+          }
+        }
+        if (nextScene.isEvidencePresentScene) {
+          return {
+            ...state,
+            currentSceneId: scene.nextSceneId,
+            currentDialogueIndex: 0,
+            isDialogueComplete: false,
+            timedObjectionActive: false,
+            timedObjectionExpired: false,
+            pendingEvidencePresentation: false,
           }
         }
         return {
@@ -255,26 +392,23 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'CHOOSE_ANSWER': {
       if (action.payload.isCorrect) {
-        const nextSceneId = action.payload.nextSceneId
-        if (!nextSceneId || !state.activeCase?.scenes[nextSceneId]) return state
-        const nextScene = state.activeCase.scenes[nextSceneId]
+        // Check credibility gate — if player's credibility meets the threshold, use alternate scene
+        let targetSceneId = action.payload.nextSceneId
+        const gate = action.payload.credibilityGate
+        if (gate && state.credibility >= gate.minCredibility && gate.alternateSceneId) {
+          targetSceneId = gate.alternateSceneId
+        }
+
+        if (!targetSceneId || !state.activeCase?.scenes[targetSceneId]) return state
+        const nextScene = state.activeCase.scenes[targetSceneId]
 
         if (nextScene.isVerdictScene) {
-          return {
-            ...state,
-            currentSceneId: nextSceneId,
-            currentDialogueIndex: 0,
-            isDialogueComplete: false,
-            timedObjectionActive: false,
-            timedObjectionExpired: false,
-            wrongAnswerMessage: null,
-            screen: 'verdict',
-          }
+          return navigateToVerdict({ ...state, wrongAnswerMessage: null, timedObjectionActive: false, timedObjectionExpired: false }, targetSceneId)
         }
         if (nextScene.isArgumentScene) {
           return {
             ...state,
-            currentSceneId: nextSceneId,
+            currentSceneId: targetSceneId,
             screen: 'argument-builder',
             timedObjectionActive: false,
             timedObjectionExpired: false,
@@ -284,9 +418,21 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             wrongAnswerMessage: null,
           }
         }
+        if (nextScene.isEvidencePresentScene) {
+          return {
+            ...state,
+            currentSceneId: targetSceneId,
+            currentDialogueIndex: 0,
+            isDialogueComplete: false,
+            timedObjectionActive: false,
+            timedObjectionExpired: false,
+            wrongAnswerMessage: null,
+            pendingEvidencePresentation: false,
+          }
+        }
         return {
           ...state,
-          currentSceneId: nextSceneId,
+          currentSceneId: targetSceneId,
           currentDialogueIndex: 0,
           isDialogueComplete: false,
           timedObjectionActive: false,
@@ -312,18 +458,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
         const nextScene = state.activeCase.scenes[nextSceneId]
         if (nextScene.isVerdictScene) {
-          return {
-            ...state,
-            credibility: newCredibility,
-            currentSceneId: nextSceneId,
-            currentDialogueIndex: 0,
-            isDialogueComplete: false,
-            timedObjectionActive: false,
-            timedObjectionExpired: false,
-            isWrongAnswerShaking: true,
-            wrongAnswerMessage: wrongMessage,
-            screen: 'verdict',
-          }
+          const withPenalty = { ...state, credibility: newCredibility, isWrongAnswerShaking: true, wrongAnswerMessage: wrongMessage, timedObjectionActive: false, timedObjectionExpired: false }
+          return navigateToVerdict(withPenalty, nextSceneId)
         }
         if (nextScene.isArgumentScene) {
           return {
@@ -460,6 +596,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         evidenceReviewed: new Set(),
         timedObjectionActive: false,
         timedObjectionExpired: false,
+        trialTimerActive: false,
+        trialTimeLeft: 900,
+        pendingEvidencePresentation: false,
+        lastPresentedEvidenceId: null,
+        evidencePresentFeedback: null,
         selectedArgumentIds: new Set(),
         argumentSubmitted: false,
         argumentFeedback: null,

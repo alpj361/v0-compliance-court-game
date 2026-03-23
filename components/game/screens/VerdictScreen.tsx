@@ -13,22 +13,46 @@ interface VerdictScreenProps {
 
 const OUTCOME_CONFIG = {
   guilty: {
-    label: 'GUILTY',
+    label: 'CULPABLE',
     headerColor: 'text-court-red',
     bannerBg: 'bg-court-red/10 border-court-red/40',
     icon: Gavel,
+    courtRules: 'El Tribunal Declara',
+  },
+  'guilty-reduced': {
+    label: 'CULPABLE',
+    headerColor: 'text-orange-400',
+    bannerBg: 'bg-orange-900/20 border-orange-600/40',
+    icon: Gavel,
+    courtRules: 'El Tribunal Declara — Con Atenuantes',
   },
   acquitted: {
-    label: 'ACQUITTED',
+    label: 'ABSUELTO',
     headerColor: 'text-green-400',
     bannerBg: 'bg-green-900/20 border-green-600/40',
     icon: Gavel,
+    courtRules: 'El Tribunal Declara',
   },
-  lesson: {
-    label: 'CASE CLOSED',
+  'null-trial': {
+    label: 'JUICIO NULO',
+    headerColor: 'text-court-grey',
+    bannerBg: 'bg-court-navy-mid border-border',
+    icon: RotateCcw,
+    courtRules: 'El Tribunal Declara',
+  },
+  postponed: {
+    label: 'POSTERGADO',
     headerColor: 'text-court-gold',
     bannerBg: 'bg-court-gold/10 border-court-gold/40',
     icon: BookOpen,
+    courtRules: 'El Tribunal Levanta la Sesión',
+  },
+  lesson: {
+    label: 'CASO CERRADO',
+    headerColor: 'text-court-gold',
+    bannerBg: 'bg-court-gold/10 border-court-gold/40',
+    icon: BookOpen,
+    courtRules: 'El Tribunal Declara',
   },
 }
 
@@ -46,7 +70,7 @@ export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenPro
           <Icon size={28} className={config.headerColor} />
         </div>
         <div className="text-[10px] font-mono tracking-[0.4em] uppercase text-muted-foreground">
-          The Court Rules
+          {config.courtRules}
         </div>
         <h2
           className={cn(
@@ -64,7 +88,7 @@ export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenPro
       {/* Lesson card */}
       <div className="max-w-2xl w-full rounded-sm border border-court-gold/50 bg-court-navy-mid p-6 md:p-8 flex flex-col gap-4">
         <div className="text-[10px] font-mono tracking-[0.3em] uppercase text-court-gold border-b border-border pb-2 mb-1">
-          Compliance Lesson
+          Lección de Cumplimiento
         </div>
         <h3 className="font-serif text-xl font-bold text-court-white leading-snug">
           {verdictData.lessonTitle}
@@ -84,7 +108,8 @@ export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenPro
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row items-center gap-4">
-        {state.activeCase?.id === 'case-1' && (
+        {/* Only show "advance" button for winning outcomes */}
+        {state.activeCase?.id === 'case-1' && (verdictData.outcome === 'guilty' || verdictData.outcome === 'guilty-reduced') && (
           <button
             onClick={() => dispatch({ type: 'GO_TO_DEBRIEF' })}
             className={cn(
@@ -94,7 +119,7 @@ export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenPro
               'transition-all duration-200 active:scale-95'
             )}
           >
-            Continue to Case 2
+            Continuar al Caso 2
           </button>
         )}
         {state.activeCase?.id === 'case-2' && (
@@ -107,7 +132,7 @@ export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenPro
               'transition-all duration-200 active:scale-95'
             )}
           >
-            Final Debrief
+            Debrief Final
           </button>
         )}
         <button
@@ -120,7 +145,7 @@ export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenPro
           )}
         >
           <RotateCcw size={13} />
-          Retry Case
+          Reintentar caso
         </button>
       </div>
 

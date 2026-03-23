@@ -135,6 +135,8 @@ export interface Choice {
   wrongPenalty?: number
   feedback: string
   nextSceneId?: string
+  // If credibility >= minCredibility when this correct choice is picked, go to alternateSceneId instead
+  credibilityGate?: { minCredibility: number; alternateSceneId: string }
 }
 
 // Multi-select closing argument piece
@@ -154,10 +156,16 @@ export interface Scene {
   isArgumentScene?: boolean
   argumentPieces?: ArgumentPiece[]
   argumentNextSceneId?: string
+  // Evidence presentation moment — player selects from Court Record
+  isEvidencePresentScene?: boolean
+  relevantEvidenceIds?: string[]      // highlighted in Court Record
+  correctEvidenceIds?: string[]       // give bonus credibility
+  evidenceBonusCredibility?: number   // bonus for correct evidence (default 5)
+  evidencePenaltyCredibility?: number // penalty for wrong evidence (default 8)
 }
 
 export interface VerdictData {
-  outcome: 'guilty' | 'acquitted' | 'lesson'
+  outcome: 'guilty' | 'guilty-reduced' | 'acquitted' | 'null-trial' | 'postponed' | 'lesson'
   title: string
   subtitle: string
   lessonTitle: string
@@ -175,6 +183,10 @@ export interface Case {
   evidence: EvidenceCard[]
   firstSceneId: string
   scenes: Record<string, Scene>
+  // Dynamic verdict routing based on final credibility (descending order)
+  verdictRoutes?: { minCredibility: number; sceneId: string }[]
+  // Scene to show if the 15-minute trial timer expires
+  postponedSceneId?: string
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -316,6 +328,15 @@ export const case1: Case = {
   ],
 
   firstSceneId: 's1-opening',
+
+  verdictRoutes: [
+    { minCredibility: 80, sceneId: 's1-verdict-perfect' },
+    { minCredibility: 50, sceneId: 's1-verdict-good' },
+    { minCredibility: 20, sceneId: 's1-verdict-bad' },
+    { minCredibility: 0,  sceneId: 's1-verdict-null' },
+  ],
+
+  postponedSceneId: 's1-postponed',
 
   scenes: {
     's1-opening': {
@@ -467,7 +488,7 @@ export const case1: Case = {
               label: 'Presentar Decreto 67-2001 Art. 18 — la ley no contempla excepciones por jerarquía ni urgencia.',
               isCorrect: true,
               feedback: '',
-              nextSceneId: 's1-elena',
+              nextSceneId: 's1-evidence-present-1',
             },
             {
               id: 'c3-b',
@@ -523,6 +544,8 @@ export const case1: Case = {
               isCorrect: true,
               feedback: '',
               nextSceneId: 's1-closing',
+              // If credibility >= 50, Fuentes plays his Elena witness card
+              credibilityGate: { minCredibility: 50, alternateSceneId: 's1-elena-defense' },
             },
             {
               id: 'c4-b',
@@ -658,6 +681,350 @@ export const case1: Case = {
         lessonTitle: 'La Confianza No es un Procedimiento',
         lessonText:
           'Rodrigo no era un agente descuidado. Era un agente seguro de sí mismo. Ocho años de experiencia, un historial impecable — y creyó que ese historial le daba el derecho de decidir cuándo aplicaba la ley.\n\nNo le daba ese derecho.\n\nEl paso del tamizaje existe precisamente porque el juicio humano, por más experimentado que sea, tiene límites. Por eso se escribió la ley. La confianza sin verificación no es profesionalismo. Es exposición.\n\nAntes del Caso 2: pregúntate — ¿cuándo fue la última vez que conocías tan bien una situación que no viste la necesidad de verificar?',
+        regulationRef: 'Decreto 67-2001, Art. 18 / Protocolo BI Sección 4.3',
+      },
+    },
+
+    // ── Evidence presentation scene ────────────────────────────────────────
+
+    's1-evidence-present-1': {
+      id: 's1-evidence-present-1',
+      isEvidencePresentScene: true,
+      relevantEvidenceIds: ['e1-warnings', 'e1-transaction-log'],
+      correctEvidenceIds: ['e1-warnings', 'e1-transaction-log'],
+      evidenceBonusCredibility: 5,
+      evidencePenaltyCredibility: 8,
+      nextSceneId: 's1-cross-exam',
+      dialogues: [
+        {
+          id: 'd1-ep1',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Antes del contrainterrogatorio, tengo una oportunidad de presentar evidencia adicional ante el tribunal. Dos documentos podrían fortalecer mi posición ahora mismo: el registro de tiempo de la transacción, y el historial de advertencias previas de Pérez. ¿Qué presento?',
+        },
+      ],
+    },
+
+    // ── Cross-examination of Rodrigo Pérez ─────────────────────────────────
+
+    's1-cross-exam': {
+      id: 's1-cross-exam',
+      nextSceneId: 's1-elena',
+      dialogues: [
+        {
+          id: 'd-cx-01',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-confident',
+          side: 'left',
+          text: 'Señor Pérez, con la venia del tribunal, quisiera aclarar algunos puntos directamente con usted.',
+        },
+        {
+          id: 'd-cx-02',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-confident',
+          side: 'right',
+          text: 'Adelante, Fiscal. No tengo nada que ocultar.',
+        },
+        {
+          id: 'd-cx-03',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: '¿Cómo atacas el contrainterrogatorio?',
+          choices: [
+            {
+              id: 'cx-a',
+              label: '"Señor Pérez — el registro bancario muestra que esta transacción tomó 4 minutos 4 segundos. El tamizaje IVE toma un mínimo de 7 minutos. ¿Cómo explica usted esa diferencia?"',
+              isCorrect: true,
+              feedback: '',
+              nextSceneId: 's1-cross-exam-timeline',
+            },
+            {
+              id: 'cx-b',
+              label: '"Señor Pérez — en septiembre y noviembre de 2025 ya fue advertido verbalmente por omitir este mismo paso. ¿Por qué repitió la conducta por tercera vez?"',
+              isCorrect: true,
+              feedback: '',
+              nextSceneId: 's1-cross-exam-pattern',
+            },
+            {
+              id: 'cx-c',
+              label: '"Señor Pérez — ¿leyó usted el correo que Elena Vásquez le envió el 10 de febrero, cuatro días antes de esta transacción?"',
+              isCorrect: false,
+              wrongPenalty: 10,
+              feedback: 'Fuentes objeta: "Su Señoría, el correo de la supervisora no ha sido presentado formalmente aún como parte del expediente en este contrainterrogatorio." Admitido. Pierdes terreno.',
+              nextSceneId: 's1-cross-exam-bad',
+            },
+          ],
+        },
+      ],
+    },
+
+    's1-cross-exam-timeline': {
+      id: 's1-cross-exam-timeline',
+      nextSceneId: 's1-elena',
+      dialogues: [
+        {
+          id: 'd-cx-tl-01',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-sweating',
+          side: 'right',
+          text: 'El... el sistema a veces no registra los tiempos con precisión. Hay latencia. Yo lo completé. Simplemente el sistema no lo capturó.',
+        },
+        {
+          id: 'd-cx-tl-02',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-confident',
+          side: 'left',
+          overlay: 'HOLD IT',
+          text: 'El sistema registra con precisión de segundos cada operación. El sello IVE está ausente — no mal registrado. Ausente. ¿Cuándo fue la última vez que el sistema "no capturó" un sello IVE en una transacción suya?',
+        },
+        {
+          id: 'd-cx-tl-03',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-cornered',
+          side: 'right',
+          text: '...',
+        },
+        {
+          id: 'd-cx-tl-04',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'El tribunal toma nota. La contradicción entre el tiempo de proceso y el tiempo requerido por el protocolo queda registrada. Continúe, Fiscal.',
+        },
+      ],
+    },
+
+    's1-cross-exam-pattern': {
+      id: 's1-cross-exam-pattern',
+      nextSceneId: 's1-elena',
+      dialogues: [
+        {
+          id: 'd-cx-pt-01',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-sweating',
+          side: 'right',
+          text: 'Esas... fueron situaciones diferentes. Los clientes eran conocidos. Aquí también. Ernesto ha sido cliente por seis años — no hay comparación.',
+        },
+        {
+          id: 'd-cx-pt-02',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-confident',
+          side: 'left',
+          overlay: 'HOLD IT',
+          text: 'Entonces su defensa es que conocía al cliente. En septiembre: conocía al cliente. En noviembre: conocía al cliente. En febrero: conocía al cliente. ¿Cuándo exactamente aplica usted el tamizaje, señor Pérez — cuando NO conoce al cliente?',
+        },
+        {
+          id: 'd-cx-pt-03',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-cornered',
+          side: 'right',
+          text: 'Yo... siempre... depende del caso.',
+        },
+        {
+          id: 'd-cx-pt-04',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'La respuesta queda registrada. "Depende del caso" no es un protocolo. Es discreción no autorizada. Continúe, Fiscal.',
+        },
+      ],
+    },
+
+    's1-cross-exam-bad': {
+      id: 's1-cross-exam-bad',
+      nextSceneId: 's1-elena',
+      dialogues: [
+        {
+          id: 'd-cx-bad-01',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'La objeción de la defensa es admitida. Fiscal, el correo de la supervisora debe ser presentado formalmente antes de utilizarlo en el contrainterrogatorio. Proceda con otro argumento o reserve esa línea.',
+        },
+        {
+          id: 'd-cx-bad-02',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Me adelanté. El correo de Elena es una pieza clave, pero necesito presentarlo en el momento correcto. Fuentes anotó el error.',
+        },
+      ],
+    },
+
+    // ── Elena Vásquez como testigo de la defensa (solo si credibilidad ≥ 50) ──
+
+    's1-elena-defense': {
+      id: 's1-elena-defense',
+      nextSceneId: 's1-closing',
+      dialogues: [
+        {
+          id: 'd-ed-01',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Su Señoría — con la venia del tribunal, la defensa llama a Elena Vásquez como testigo.',
+        },
+        {
+          id: 'd-ed-02',
+          speaker: 'Elena Vásquez',
+          portrait: 'elena-nervous',
+          side: 'right',
+          text: 'Su Señoría... no estaba informada de que sería llamada a declarar hoy.',
+        },
+        {
+          id: 'd-ed-03',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Señora Vásquez — ¿es correcto que el señor Pérez ya había omitido el tamizaje en transacciones anteriores y usted no tomó ninguna acción disciplinaria formal?',
+        },
+        {
+          id: 'd-ed-04',
+          speaker: 'Elena Vásquez',
+          portrait: 'elena-nervous',
+          side: 'right',
+          text: 'Sí, pero fueron advertencias verbales. Creímos que era suficiente para corregir la conducta. No queríamos escalar innecesariamente.',
+        },
+        {
+          id: 'd-ed-05',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Entonces el banco, bajo su supervisión directa, toleró y normalizó este comportamiento. Mi cliente no inventó una excepción — la institución la creó. Su Señoría, solicito que se evalúe la responsabilidad institucional como factor atenuante.',
+        },
+        {
+          id: 'd-ed-06',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Fuentes ha usado el testimonio de Elena para argumentar que el banco normalizó el incumplimiento. Tienes 12 segundos para objetar.',
+          timedObjection: true,
+          timedSeconds: 12,
+          choices: [
+            {
+              id: 'ced-a',
+              label: 'OBJECCIÓN — "Exactamente lo contrario, Su Señoría. Las advertencias documentadas prueban que la institución reconoció la conducta como inaceptable y la registró formalmente. El señor Pérez fue advertido dos veces y eligió continuar. Eso no es normalización — es incumplimiento reiterado con conocimiento."',
+              isCorrect: true,
+              feedback: '',
+              nextSceneId: 's1-closing',
+            },
+            {
+              id: 'ced-b',
+              label: 'OBJECCIÓN — "La señora Vásquez fue coaccionada para testificar. Su testimonio no es válido."',
+              isCorrect: false,
+              wrongPenalty: 15,
+              feedback: 'Magistrado Morales: "Fiscal, ese argumento carece de fundamento. La testigo fue llamada legítimamente. Reformule o retira la objeción."',
+              nextSceneId: 's1-elena-defense-bad',
+            },
+            {
+              id: 'ced-c',
+              label: '(No objetar — dejar que el argumento de Fuentes quede en pie)',
+              isCorrect: false,
+              wrongPenalty: 20,
+              feedback: 'El silencio es letal. Fuentes sonríe. El argumento de atenuante institucional queda sin respuesta en el registro.',
+              nextSceneId: 's1-elena-defense-bad',
+            },
+          ],
+        },
+      ],
+    },
+
+    's1-elena-defense-bad': {
+      id: 's1-elena-defense-bad',
+      nextSceneId: 's1-closing',
+      dialogues: [
+        {
+          id: 'd-ed-bad-01',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'El argumento de la defensa sobre responsabilidad institucional queda registrado. La fiscalía tendrá la oportunidad de responderlo en el alegato de cierre.',
+        },
+        {
+          id: 'd-ed-bad-02',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Fuentes anotó ese punto. Necesito recuperarlo en el cierre — el argumento correcto es que las advertencias documentadas prueban exactamente lo contrario: la institución nunca aceptó esta conducta como válida.',
+        },
+      ],
+    },
+
+    // ── Verdict scenes (credibilidad-gated) ────────────────────────────────
+
+    's1-verdict-perfect': {
+      id: 's1-verdict-perfect',
+      isVerdictScene: true,
+      dialogues: [],
+      verdictData: {
+        outcome: 'guilty',
+        title: 'CULPABLE',
+        subtitle: 'Rodrigo Pérez — incumplimiento doloso de obligaciones ALD, Decreto 67-2001',
+        lessonTitle: 'La Confianza No es un Procedimiento',
+        lessonText:
+          'Rodrigo no era un agente descuidado. Era un agente seguro de sí mismo. Ocho años de experiencia, un historial impecable — y creyó que ese historial le daba el derecho de decidir cuándo aplicaba la ley.\n\nNo le daba ese derecho.\n\nTu ejecución fue impecable. Presentaste la evidencia en el orden correcto, estableciste la obligación antes de mostrar las consecuencias, y no cediste terreno en ningún momento. El tribunal no tuvo otra opción.\n\nEl paso del tamizaje existe precisamente porque el juicio humano, por más experimentado que sea, tiene límites. Por eso se escribió la ley. La confianza sin verificación no es profesionalismo. Es exposición.\n\nAntes del Caso 2: pregúntate — ¿cuándo fue la última vez que conocías tan bien una situación que no viste la necesidad de verificar?',
+        regulationRef: 'Decreto 67-2001, Art. 18 / Protocolo BI Sección 4.3',
+      },
+    },
+
+    's1-verdict-good': {
+      id: 's1-verdict-good',
+      isVerdictScene: true,
+      dialogues: [],
+      verdictData: {
+        outcome: 'guilty-reduced',
+        title: 'CULPABLE',
+        subtitle: 'Con atenuantes — Sentencia reducida tras apelación parcial de la defensa',
+        lessonTitle: 'Ganaste, Pero Dejaste Puntos Sobre la Mesa',
+        lessonText:
+          'Rodrigo fue declarado culpable — la evidencia era suficiente. Pero Fuentes explotó los momentos donde tu argumento fue débil para negociar una sentencia menor. El banco enfrentará una multa reducida.\n\nUn caso bien construido no da espacios. Cada argumento débil es una palanca para la defensa. El resultado fue correcto, pero el proceso costó más de lo necesario.\n\nLección: en cumplimiento, como en compliance, los procedimientos existen para cerrar las grietas antes de que alguien las explote. Un argumento a medias es tan peligroso como ningún argumento.\n\nAntes del Caso 2: revisa en qué momento cediste terreno innecesariamente. Ese es el punto que debes fortalecer.',
+        regulationRef: 'Decreto 67-2001, Art. 18 / Protocolo BI Sección 4.3',
+      },
+    },
+
+    's1-verdict-bad': {
+      id: 's1-verdict-bad',
+      isVerdictScene: true,
+      dialogues: [],
+      verdictData: {
+        outcome: 'acquitted',
+        title: 'ABSUELTO',
+        subtitle: 'Evidencia presentada insuficientemente — Rodrigo Pérez queda libre',
+        lessonTitle: 'La Evidencia Existía. El Problema Fue la Presentación.',
+        lessonText:
+          'Rodrigo Pérez sale libre. No porque fuera inocente — los hechos estaban claros. Sino porque Fuentes explotó cada error argumental hasta que el tribunal consideró que la fiscalía no había establecido el caso con suficiente solidez.\n\nTenías el Decreto 67-2001. Tenías el protocolo firmado. Tenías el registro de la transacción. Tenías el correo de Elena con read receipt. Tenías las advertencias previas.\n\nNo falló la evidencia. Falló la forma en que se presentó.\n\nEsta es la lección más dura del compliance: no basta con tener razón. Hay que poder demostrarlo, en orden, sin conceder terreno, con cada pieza en su momento correcto.\n\nReinicia el caso y construye el argumento que merecía esa evidencia.',
+        regulationRef: 'Decreto 67-2001, Art. 18 / Protocolo BI Sección 4.3',
+      },
+    },
+
+    's1-verdict-null': {
+      id: 's1-verdict-null',
+      isVerdictScene: true,
+      dialogues: [],
+      verdictData: {
+        outcome: 'null-trial',
+        title: 'JUICIO NULO',
+        subtitle: 'Nulidad declarada por mala práctica fiscal — expediente devuelto',
+        lessonTitle: 'Cuando el Proceso Falla, el Sistema Falla',
+        lessonText:
+          'Magistrado Morales declara nulidad. El expediente es devuelto a la fiscalía. Rodrigo Pérez queda en libertad provisional.\n\nNo fue falta de evidencia. Fue una cadena de errores argumentales que socavó la credibilidad de la fiscalía hasta el punto en que el tribunal no puede dictar sentencia válida sobre esta base.\n\nEn compliance, como en derecho, la forma es tan importante como el fondo. Un procedimiento mal ejecutado invalida incluso los resultados correctos. Si el tamizaje de Pérez fue omitido, la presentación de la fiscalía también lo fue.\n\nReinicia desde el principio. La evidencia sigue estando ahí. Esta vez, úsala correctamente.',
+        regulationRef: 'Decreto 67-2001, Art. 18 / Protocolo BI Sección 4.3',
+      },
+    },
+
+    's1-postponed': {
+      id: 's1-postponed',
+      isVerdictScene: true,
+      dialogues: [],
+      verdictData: {
+        outcome: 'postponed',
+        title: 'SESIÓN POSTERGADA',
+        subtitle: 'El tribunal levanta la sesión — el caso queda pendiente',
+        lessonTitle: 'El Tiempo También es un Recurso de Compliance',
+        lessonText:
+          'Magistrado Morales levanta la sesión. El tribunal agotó el tiempo asignado sin llegar a veredicto. El caso se pospone para nueva fecha.\n\nRodrigo Pérez sale del salón sin condena. Fuentes lo felicita.\n\nEn un juicio real, el tiempo perdido en argumentos incorrectos, evidencia mal presentada o silencios prolongados tiene un costo directo: la justicia se demora, y a veces no llega.\n\nEn compliance es igual. Los procedimientos tienen plazos. Las obligaciones tienen ventanas. El tamizaje IVE existe precisamente porque esperar "el momento correcto" no es una opción válida.\n\nReinicia el caso. Esta vez: muévete con precisión y velocidad.',
         regulationRef: 'Decreto 67-2001, Art. 18 / Protocolo BI Sección 4.3',
       },
     },
