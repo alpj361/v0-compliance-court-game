@@ -676,6 +676,38 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             pendingEvidencePresentation: false,
           }
         }
+        // If the next scene is an empty credibility router, process it immediately to avoid
+        // a blank-screen deadlock (no dialogues → nothing renders → user can't click to advance)
+        if (nextScene.isCredibilityRouterScene && nextScene.dialogues.length === 0 && nextScene.credibilityRoutes?.length) {
+          const sorted = [...nextScene.credibilityRoutes].sort((a, b) => b.minCredibility - a.minCredibility)
+          const match = sorted.find((r) => state.credibility >= r.minCredibility)
+          const routeTargetId = match?.sceneId ?? nextScene.nextSceneId
+          if (routeTargetId && state.activeCase?.scenes[routeTargetId]) {
+            const routeTarget = state.activeCase.scenes[routeTargetId]
+            if (routeTarget.isVerdictScene) {
+              if (nextScene.bypassVerdictRouting) {
+                return {
+                  ...state,
+                  screen: 'verdict',
+                  currentSceneId: routeTargetId,
+                  trialTimerActive: false,
+                  case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
+                  case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+                  otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
+                }
+              }
+              return navigateToVerdict(state, routeTargetId)
+            }
+            return {
+              ...state,
+              currentSceneId: routeTargetId,
+              currentDialogueIndex: 0,
+              isDialogueComplete: false,
+              timedObjectionActive: false,
+              timedObjectionExpired: false,
+            }
+          }
+        }
         return {
           ...state,
           currentSceneId: scene.nextSceneId,
@@ -729,6 +761,17 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             pendingEvidencePresentation: false,
           }
         }
+        if (nextScene.isCredibilityRouterScene && nextScene.dialogues.length === 0 && nextScene.credibilityRoutes?.length) {
+          const sorted = [...nextScene.credibilityRoutes].sort((a, b) => b.minCredibility - a.minCredibility)
+          const match = sorted.find((r) => state.credibility >= r.minCredibility)
+          const routeTargetId = match?.sceneId ?? nextScene.nextSceneId
+          if (routeTargetId && state.activeCase?.scenes[routeTargetId]) {
+            const routeTarget = state.activeCase.scenes[routeTargetId]
+            const baseState = { ...state, wrongAnswerMessage: null, timedObjectionActive: false, timedObjectionExpired: false }
+            if (routeTarget.isVerdictScene) return navigateToVerdict(baseState, routeTargetId)
+            return { ...baseState, currentSceneId: routeTargetId, currentDialogueIndex: 0, isDialogueComplete: false }
+          }
+        }
         return {
           ...state,
           currentSceneId: targetSceneId,
@@ -773,6 +816,17 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             argumentFeedback: null,
             isWrongAnswerShaking: true,
             wrongAnswerMessage: wrongMessage,
+          }
+        }
+        if (nextScene.isCredibilityRouterScene && nextScene.dialogues.length === 0 && nextScene.credibilityRoutes?.length) {
+          const sorted = [...nextScene.credibilityRoutes].sort((a, b) => b.minCredibility - a.minCredibility)
+          const stateWithPenalty = { ...state, credibility: newCredibility, isWrongAnswerShaking: true, wrongAnswerMessage: wrongMessage, timedObjectionActive: false, timedObjectionExpired: false }
+          const match = sorted.find((r) => stateWithPenalty.credibility >= r.minCredibility)
+          const routeTargetId = match?.sceneId ?? nextScene.nextSceneId
+          if (routeTargetId && state.activeCase?.scenes[routeTargetId]) {
+            const routeTarget = state.activeCase.scenes[routeTargetId]
+            if (routeTarget.isVerdictScene) return navigateToVerdict(stateWithPenalty, routeTargetId)
+            return { ...stateWithPenalty, currentSceneId: routeTargetId, currentDialogueIndex: 0, isDialogueComplete: false }
           }
         }
         return {
