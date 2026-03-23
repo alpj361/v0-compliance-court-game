@@ -14,7 +14,7 @@ import { CredibilityMeter } from '@/components/game/CredibilityMeter'
 import { EvidenceCard } from '@/components/game/EvidenceCard'
 import { DramaticOverlay } from '@/components/game/DramaticOverlay'
 import { TypewriterText } from '@/components/game/TypewriterText'
-import { BookOpen, ChevronRight, Timer, AlertCircle } from 'lucide-react'
+import { BookOpen, ChevronRight, Timer, AlertCircle, Clock, FileSearch, SkipForward, CheckCircle2 } from 'lucide-react'
 
 interface TrialChatProps {
   state: GameState
@@ -43,7 +43,13 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
   const {
     activeCase, pendingOverlay, isWrongAnswerShaking, wrongAnswerMessage,
     credibility, evidenceReviewed, timedObjectionActive, timedObjectionExpired,
+    trialTimerActive, trialTimeLeft,
+    pendingEvidencePresentation, evidencePresentFeedback, lastPresentedEvidenceId,
   } = state
+
+  const currentScene = activeCase?.scenes[state.currentSceneId ?? ''] ?? null
+  const relevantIds = new Set(currentScene?.relevantEvidenceIds ?? [])
+  const correctIds = new Set(currentScene?.correctEvidenceIds ?? [])
 
   const [courtRecordOpen, setCourtRecordOpen] = useState(false)
   const [skipTyping, setSkipTyping] = useState(false)
@@ -92,6 +98,27 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
     return () => { if (shakeRef.current) clearTimeout(shakeRef.current) }
   }, [isWrongAnswerShaking, clearShake])
 
+  // 15-minute global trial timer
+  const trialTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  useEffect(() => {
+    if (trialTimerActive && trialTimeLeft > 0) {
+      trialTimerRef.current = setInterval(() => {
+        dispatch({ type: 'TICK_TRIAL_TIMER' })
+      }, 1000)
+    } else if (trialTimerActive && trialTimeLeft <= 0) {
+      dispatch({ type: 'TRIAL_TIMER_EXPIRE' })
+    }
+    return () => { if (trialTimerRef.current) clearInterval(trialTimerRef.current) }
+  }, [trialTimerActive, trialTimeLeft, dispatch])
+
+  // Auto-clear evidence feedback after 2.5s
+  useEffect(() => {
+    if (evidencePresentFeedback) {
+      const t = setTimeout(() => dispatch({ type: 'CLEAR_EVIDENCE_FEEDBACK' }), 2500)
+      return () => clearTimeout(t)
+    }
+  }, [evidencePresentFeedback, dispatch])
+
   // Auto-scroll to bottom whenever history or current dialogue changes
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -117,6 +144,7 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
         penalty: choice.wrongPenalty,
         feedback: choice.feedback,
         nextSceneId: choice.nextSceneId,
+        credibilityGate: choice.credibilityGate,
       },
     })
   }, [dispatch, state.playerName])
@@ -126,7 +154,8 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
   }
 
   function handleAdvance() {
-    if (isChoicePoint || timedObjectionActive) return
+    // Guard: do not advance when waiting for evidence selection
+    if (isChoicePoint || timedObjectionActive || pendingEvidencePresentation) return
     if (!state.isDialogueComplete) {
       setSkipTyping(true)
       return
@@ -151,6 +180,10 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
   const timerPct = timedObjectionActive ? (timerLeft / timedSeconds) * 100 : 100
   const style = getSpeakerStyle(currentDialogue.side)
 
+  const trialMins = Math.floor(trialTimeLeft / 60)
+  const trialSecs = trialTimeLeft % 60
+  const trialTimerUrgent = trialTimeLeft <= 120
+
   return (
     <div className={cn('relative w-full h-screen max-h-screen flex flex-col overflow-hidden bg-court-navy', isWrongAnswerShaking && 'animate-shake')}>
       {pendingOverlay && (
@@ -163,6 +196,18 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
           <span className="text-[10px] font-mono tracking-widest uppercase text-court-gold/80">{activeCase.title}</span>
           <span className="text-[10px] font-mono text-muted-foreground">{activeCase.roleLabel} — {activeCase.jurisdiction}</span>
         </div>
+        {/* 15-min trial timer */}
+        {(trialTimerActive || trialTimeLeft < 900) && (
+          <div className={cn(
+            'flex items-center gap-1 px-2 py-1 border text-[10px] font-mono font-bold tabular-nums tracking-wider',
+            trialTimerUrgent
+              ? 'border-court-red/70 bg-court-red/10 text-court-red animate-pulse'
+              : 'border-border bg-transparent text-court-gold/80'
+          )}>
+            <Clock size={10} />
+            {String(trialMins).padStart(2, '0')}:{String(trialSecs).padStart(2, '0')}
+          </div>
+        )}
         <CredibilityMeter value={credibility} isHit={isWrongAnswerShaking} />
         <button
           onClick={() => setCourtRecordOpen(!courtRecordOpen)}
@@ -170,11 +215,13 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
             'flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-mono tracking-widest uppercase border transition-all duration-150 shrink-0',
             courtRecordOpen
               ? 'border-court-gold bg-court-gold/20 text-court-gold'
-              : 'border-border bg-court-navy/80 text-muted-foreground hover:border-court-gold/50 hover:text-court-gold/70'
+              : 'border-border bg-court-navy/80 text-muted-foreground hover:border-court-gold/50 hover:text-court-gold/70',
+            pendingEvidencePresentation && !courtRecordOpen && 'border-court-gold/60 text-court-gold/70 animate-pulse'
           )}
         >
           <BookOpen size={11} />
           Record
+          {pendingEvidencePresentation && <span className="ml-0.5">↑</span>}
         </button>
       </div>
 
@@ -281,14 +328,70 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
           </div>
         )}
 
+        {/* Evidence presentation mode */}
+        {pendingEvidencePresentation && currentScene?.isEvidencePresentScene && (
+          <div className="flex flex-col gap-3 mt-2">
+            {/* Feedback from previous presentation */}
+            {evidencePresentFeedback && (
+              <div className={cn(
+                'text-xs font-sans text-center px-3 py-2 border rounded-sm',
+                evidencePresentFeedback.startsWith('+')
+                  ? 'bg-green-900/20 border-green-600/30 text-green-300'
+                  : 'bg-court-red/10 border-court-red/30 text-court-white/80'
+              )}>
+                {evidencePresentFeedback}
+              </div>
+            )}
+            <div className="text-[10px] font-mono tracking-widest uppercase text-court-gold/80 flex items-center gap-1.5 justify-center">
+              <FileSearch size={10} />
+              Selecciona la evidencia a presentar
+            </div>
+            {activeCase.evidence.filter((c) => relevantIds.has(c.id)).map((card) => {
+              const isCorrect = correctIds.has(card.id)
+              const alreadyPresented = lastPresentedEvidenceId === card.id
+              return (
+                <div key={card.id} className="relative">
+                  {alreadyPresented && (
+                    <div className="absolute -top-2 -right-2 z-10 flex items-center gap-1 bg-court-gold text-court-navy text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full">
+                      <CheckCircle2 size={9} />
+                      Presentada
+                    </div>
+                  )}
+                  <EvidenceCard card={card} isReviewed={evidenceReviewed.has(card.id)} />
+                  {!alreadyPresented && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); dispatch({ type: 'PRESENT_EVIDENCE', payload: card.id }) }}
+                      className={cn(
+                        'mt-2 w-full py-2 text-xs font-mono font-bold tracking-widest uppercase border transition-all duration-150',
+                        isCorrect
+                          ? 'border-court-gold/60 text-court-gold bg-court-gold/10 hover:bg-court-gold/20'
+                          : 'border-border text-muted-foreground hover:border-court-grey hover:text-foreground'
+                      )}
+                    >
+                      Presentar esta evidencia
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+            <button
+              onClick={(e) => { e.stopPropagation(); dispatch({ type: 'SKIP_EVIDENCE_PRESENTATION' }) }}
+              className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-mono tracking-widest uppercase border border-border text-muted-foreground hover:border-court-grey hover:text-foreground transition-all"
+            >
+              <SkipForward size={11} />
+              Continuar sin presentar
+            </button>
+          </div>
+        )}
+
         {/* Continue prompt */}
-        {state.isDialogueComplete && !isChoicePoint && !timedObjectionActive && (
+        {state.isDialogueComplete && !isChoicePoint && !timedObjectionActive && !pendingEvidencePresentation && (
           <div className="flex justify-center mt-1">
             <button
               onClick={(e) => { e.stopPropagation(); handleAdvance() }}
               className="flex items-center gap-1.5 text-xs text-court-gold/60 font-mono tracking-wider uppercase hover:text-court-gold transition-colors px-3 py-1.5 border border-border rounded-sm hover:border-court-gold/40"
             >
-              Continue
+              Continuar
               <ChevronRight size={12} />
             </button>
           </div>
