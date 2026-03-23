@@ -10,6 +10,7 @@ import { CredibilityMeter } from '@/components/game/CredibilityMeter'
 import { EvidenceCard } from '@/components/game/EvidenceCard'
 import { DramaticOverlay } from '@/components/game/DramaticOverlay'
 import { BookOpen, ChevronRight, Timer, Clock, FileSearch, CheckCircle2, SkipForward } from 'lucide-react'
+import { LegalAdvisorButton } from '@/components/game/LegalAdvisorButton'
 
 interface TrialProps {
   state: GameState
@@ -211,6 +212,15 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
         <div className="absolute top-3 right-4 z-10">
           <CredibilityMeter value={credibility} isHit={isWrongAnswerShaking} label={credibilityLabel} />
         </div>
+
+        {/* Legal Advisor button — bottom-left of scene area, only when scene has a note */}
+        {currentScene?.legalAdvisorNote && (
+          <LegalAdvisorButton
+            note={currentScene.legalAdvisorNote}
+            videoUrl={currentScene.legalAdvisorVideoUrl}
+            className="absolute bottom-4 left-4 z-10"
+          />
+        )}
 
         {/* Court Record button — below timer */}
         <button

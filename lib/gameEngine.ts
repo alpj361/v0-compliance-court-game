@@ -315,17 +315,37 @@ function resolveVerdictSceneId(state: GameState, fallbackSceneId?: string): stri
   return match?.sceneId ?? fallbackSceneId ?? null
 }
 
-/** Navigate to verdict screen using credibility-gated routing */
+/** Navigate to verdict screen using credibility-gated routing.
+ *  If the resolved scene has dialogues and is NOT already a verdict scene,
+ *  we route to 'trial' first so the judge can speak before the lesson card appears. */
 function navigateToVerdict(state: GameState, fallbackSceneId?: string): GameState {
   const sceneId = resolveVerdictSceneId(state, fallbackSceneId)
-  return {
-    ...state,
-    screen: 'verdict',
-    currentSceneId: sceneId,
-    trialTimerActive: false,
+  const targetScene = sceneId ? state.activeCase?.scenes[sceneId] : undefined
+  const completionFlags = {
     case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
     case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
     otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
+  }
+  // Pre-verdict scene: has dialogues and is not itself isVerdictScene → play in trial first
+  if (targetScene && !targetScene.isVerdictScene && targetScene.dialogues.length > 0) {
+    return {
+      ...state,
+      ...completionFlags,
+      screen: 'trial',
+      currentSceneId: sceneId,
+      currentDialogueIndex: 0,
+      isDialogueComplete: false,
+      trialTimerActive: false,
+      timedObjectionActive: false,
+      timedObjectionExpired: false,
+    }
+  }
+  return {
+    ...state,
+    ...completionFlags,
+    screen: 'verdict',
+    currentSceneId: sceneId,
+    trialTimerActive: false,
   }
 }
 
@@ -420,6 +440,23 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'TRIAL_TIMER_EXPIRE': {
       const postponedSceneId = state.activeCase?.postponedSceneId ?? null
+      const postponedScene = postponedSceneId ? state.activeCase?.scenes[postponedSceneId] : null
+      // If the postponed scene has dialogues (pre-verdict scene), play it in trial
+      // before advancing to the final verdict screen via its nextSceneId.
+      if (postponedScene && !postponedScene.isVerdictScene && postponedScene.dialogues.length > 0) {
+        return {
+          ...state,
+          trialTimerActive: false,
+          trialTimeLeft: 0,
+          screen: 'trial',
+          currentSceneId: postponedSceneId,
+          currentDialogueIndex: 0,
+          isDialogueComplete: false,
+          case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
+          case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+          otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
+        }
+      }
       return {
         ...state,
         trialTimerActive: false,

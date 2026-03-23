@@ -143,13 +143,13 @@ export const case1: Case = {
   firstSceneId: 's1-opening',
 
   verdictRoutes: [
-    { minCredibility: 80, sceneId: 's1-verdict-perfect' },
-    { minCredibility: 50, sceneId: 's1-verdict-good' },
-    { minCredibility: 20, sceneId: 's1-verdict-bad' },
-    { minCredibility: 0,  sceneId: 's1-verdict-null' },
+    { minCredibility: 80, sceneId: 's1-verdict-perfect-pre' },
+    { minCredibility: 50, sceneId: 's1-verdict-good-pre' },
+    { minCredibility: 20, sceneId: 's1-verdict-bad-pre' },
+    { minCredibility: 0,  sceneId: 's1-verdict-null-pre' },
   ],
 
-  postponedSceneId: 's1-postponed',
+  postponedSceneId: 's1-postponed-pre',
 
   scenes: {
     's1-opening': {
@@ -1264,6 +1264,227 @@ export const case1: Case = {
           text: 'Fui por el camino fácil. La culpa del cliente no es el argumento. El argumento es que la obligación existe en el momento de la transacción — independientemente de quién sea el cliente.',
         },
       ],
+    },
+
+    // ── Pre-verdict dialogue scenes (credibility-gated via verdictRoutes) ──
+    // These scenes play the judge's oral verdict before transitioning to the
+    // final isVerdictScene (lesson card). Each has bypassVerdictRouting: true
+    // so the engine goes directly to nextSceneId without re-evaluating routes.
+
+    // ── PERFECT path (≥80 credibility) ────────────────────────────────────
+    's1-verdict-perfect-pre': {
+      id: 's1-verdict-perfect-pre',
+      bypassVerdictRouting: true,
+      dialogues: [
+        {
+          id: 'd1-vpp-01',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'El tribunal ha deliberado. La fiscalía construyó un caso impecable — la obligación legal fue establecida con precisión, la evidencia se presentó en el orden correcto, y cada argumento de la defensa fue respondido con rigor.',
+        },
+        {
+          id: 'd1-vpp-02',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-cornered',
+          side: 'right',
+          text: '...',
+        },
+        {
+          id: 'd1-vpp-03',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'El señor Rodrigo Pérez firmó el protocolo. Recibió el recordatorio. Fue advertido dos veces. Y procedió de todas formas. Este tribunal declara: CULPABLE. El expediente pasa a la SIB para determinación de sanciones.',
+        },
+        {
+          id: 'd1-vpp-04',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-rattled',
+          side: 'right',
+          text: 'Su Señoría, solicitamos que se considere la trayectoria de mi cliente al determinar la sanción.',
+        },
+        {
+          id: 'd1-vpp-05',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'Denegado. La trayectoria no reemplaza al procedimiento. Se levanta la sesión.',
+        },
+      ],
+      nextSceneId: 's1-verdict-perfect',
+    },
+
+    // ── GOOD path (50–79 credibility) ─────────────────────────────────────
+    's1-verdict-good-pre': {
+      id: 's1-verdict-good-pre',
+      bypassVerdictRouting: true,
+      dialogues: [
+        {
+          id: 'd1-vgp-01',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'El tribunal ha revisado el expediente completo. La fiscalía estableció los hechos esenciales — el paso no fue completado, la obligación existía, el protocolo fue firmado.',
+        },
+        {
+          id: 'd1-vgp-02',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'Sin embargo, la defensa logró introducir dudas razonables sobre el contexto institucional. Este tribunal no puede ignorar las grietas argumentales que la fiscalía dejó abiertas.',
+        },
+        {
+          id: 'd1-vgp-03',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Su Señoría, la institución misma toleró este comportamiento. Solicito que eso se refleje en la resolución.',
+        },
+        {
+          id: 'd1-vgp-04',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'El tribunal declara CULPABLE al acusado Rodrigo Pérez — con atenuantes. La sanción será reducida en consideración al contexto institucional señalado por la defensa. El expediente pasa a la SIB con esta anotación.',
+        },
+        {
+          id: 'd1-vgp-05',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-sweating',
+          side: 'right',
+          text: '...',
+        },
+      ],
+      nextSceneId: 's1-verdict-good',
+    },
+
+    // ── BAD path (20–49 credibility) ──────────────────────────────────────
+    's1-verdict-bad-pre': {
+      id: 's1-verdict-bad-pre',
+      bypassVerdictRouting: true,
+      dialogues: [
+        {
+          id: 'd1-vbp-01',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'Este tribunal ha presenciado una presentación fiscal con serias deficiencias. Argumentos cedidos sin necesidad. Evidencia presentada fuera de orden. Silencios en momentos críticos.',
+        },
+        {
+          id: 'd1-vbp-02',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'La fiscalía no logró sostener la carga probatoria, Su Señoría. La evidencia documental fue manejada con negligencia argumental.',
+        },
+        {
+          id: 'd1-vbp-03',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'El tribunal coincide. La evidencia documental existía — pero no fue presentada con la solidez argumental necesaria. Este tribunal declara al acusado Rodrigo Pérez ABSUELTO por insuficiencia probatoria imputable a la fiscalía.',
+        },
+        {
+          id: 'd1-vbp-04',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-confident',
+          side: 'right',
+          text: '...',
+        },
+        {
+          id: 'd1-vbp-05',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'Se levanta la sesión. El expediente queda archivado. Fiscal, este tribunal le recomienda revisar sus procedimientos de presentación antes de volver a esta sala.',
+        },
+      ],
+      nextSceneId: 's1-verdict-bad',
+    },
+
+    // ── NULL path (<20 credibility) ────────────────────────────────────────
+    's1-verdict-null-pre': {
+      id: 's1-verdict-null-pre',
+      bypassVerdictRouting: true,
+      dialogues: [
+        {
+          id: 'd1-vnp-01',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'Este tribunal se ha visto en la necesidad de deliberar sobre la validez misma de este proceso. Lo que hemos presenciado hoy no alcanza el estándar mínimo de rigor que una causa penal exige.',
+        },
+        {
+          id: 'd1-vnp-02',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Su Señoría, solicito que se declare la nulidad del proceso por insuficiencia fiscal. Mi cliente no puede ser sometido a nueva causa sobre los mismos hechos con este expediente.',
+        },
+        {
+          id: 'd1-vnp-03',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'El tribunal declara la NULIDAD de este juicio. El expediente es devuelto a la fiscalía. Rodrigo Pérez queda en libertad provisional. Este proceso no puede producir una sentencia válida sobre la base presentada.',
+        },
+        {
+          id: 'd1-vnp-04',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-confident',
+          side: 'right',
+          text: 'Gracias, Su Señoría.',
+        },
+        {
+          id: 'd1-vnp-05',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'Fiscal — el expediente Pérez contiene evidencia suficiente para una condena. El problema no fue la evidencia. Fue usted. Se levanta la sesión.',
+        },
+      ],
+      nextSceneId: 's1-verdict-null',
+    },
+
+    // ── POSTPONED pre-scene (timer expires) ────────────────────────────────
+    // Note: the engine sends expired-timer directly to postponedSceneId ('s1-postponed').
+    // We keep s1-postponed as isVerdictScene but add an intermediate scene for
+    // manual navigation if needed. The timer path goes directly to s1-postponed.
+    's1-postponed-pre': {
+      id: 's1-postponed-pre',
+      bypassVerdictRouting: true,
+      dialogues: [
+        {
+          id: 'd1-pp-01',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'El tribunal ha agotado el tiempo asignado para esta audiencia sin que la fiscalía haya completado su presentación.',
+        },
+        {
+          id: 'd1-pp-02',
+          speaker: 'Magistrado Morales',
+          portrait: 'judge-angry',
+          side: 'center',
+          text: 'Este expediente queda postergado para nueva fecha. El acusado Rodrigo Pérez queda en libertad provisional hasta la próxima audiencia. Se levanta la sesión.',
+        },
+        {
+          id: 'd1-pp-03',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Gracias, Su Señoría. Mi cliente continuará con su vida normal hasta la próxima citación.',
+        },
+        {
+          id: 'd1-pp-04',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'El tiempo se agotó. Rodrigo sale del salón sin condena. El expediente queda pendiente — pero la ventana de este momento se cerró.',
+        },
+      ],
+      nextSceneId: 's1-postponed',
     },
   },
 }

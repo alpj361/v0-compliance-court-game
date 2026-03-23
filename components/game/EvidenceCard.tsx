@@ -14,6 +14,7 @@ import { LegalTextRenderer } from '@/components/game/evidence/LegalTextRenderer'
 import { PaperDocRenderer } from '@/components/game/evidence/PaperDocRenderer'
 import { CoachingLogRenderer } from '@/components/game/evidence/CoachingLogRenderer'
 import { CallReportRenderer } from '@/components/game/evidence/CallReportRenderer'
+import { VideoRenderer } from '@/components/game/evidence/VideoEvidenceRenderer'
 import { Terminal, ChevronDown, ChevronUp } from 'lucide-react'
 
 // ── BankRecordRenderer — inlined ──────────────────────────────────────────────
@@ -167,6 +168,9 @@ export function EvidenceCard({ card, isReviewed, onReview }: EvidenceCardProps) 
       )}
       {card.displayType === 'call-report' && card.callReportMeta && (
         <CallReportRenderer meta={card.callReportMeta} isKey={card.isKey} onRead={handleRead} />
+      )}
+      {card.displayType === 'video' && card.videoMeta && (
+        <VideoRenderer meta={card.videoMeta} isKey={card.isKey} onRead={handleRead} />
       )}
     </div>
   )

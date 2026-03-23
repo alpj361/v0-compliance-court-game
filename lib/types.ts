@@ -47,6 +47,7 @@ export type EvidenceDisplayType =
   | 'paper-doc'      // renders as scanned paper / memo / certificate
   | 'coaching-log'   // renders as signed coaching form
   | 'call-report'    // renders as QA call monitoring spreadsheet
+  | 'video'          // renders as an inline video player
 
 export interface EmailMeta {
   from: string
@@ -108,6 +109,13 @@ export interface CallReportMeta {
   summary: string
 }
 
+export interface VideoMeta {
+  src: string           // path relative to /public, e.g. '/videos/foo.mp4'
+  title: string
+  description?: string
+  poster?: string       // optional poster image path
+}
+
 export interface EvidenceCard {
   id: string
   title: string
@@ -123,6 +131,7 @@ export interface EvidenceCard {
   paperDocMeta?: PaperDocMeta
   coachingLogMeta?: CoachingLogMeta
   callReportMeta?: CallReportMeta
+  videoMeta?: VideoMeta
 }
 
 export interface DialogueLine {
@@ -182,6 +191,10 @@ export interface Scene {
   correctEvidenceIds?: string[]       // give bonus credibility
   evidenceBonusCredibility?: number   // bonus for correct evidence (default 5)
   evidencePenaltyCredibility?: number // penalty for wrong evidence (default 8)
+  // Legal advisor hint shown in the LegalAdvisorButton modal for this scene
+  legalAdvisorNote?: string
+  // Optional video URL shown in the LegalAdvisorButton modal
+  legalAdvisorVideoUrl?: string
 }
 
 export interface VerdictData {
