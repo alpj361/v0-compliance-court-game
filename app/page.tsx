@@ -10,6 +10,7 @@ import { TrialChat }       from '@/components/game/screens/TrialChat'
 import { ArgumentBuilder } from '@/components/game/screens/ArgumentBuilder'
 import { VerdictScreen }   from '@/components/game/screens/VerdictScreen'
 import { Debrief }         from '@/components/game/screens/Debrief'
+import { Options }         from '@/components/game/screens/Options'
 
 export default function ComplianceCourtPage() {
   const {
@@ -18,6 +19,7 @@ export default function ComplianceCourtPage() {
     hasSavedGame,
     continueGame,
     startNewGame,
+    clearSave,
     currentDialogue,
     isChoicePoint,
     verdictData,
@@ -31,6 +33,7 @@ export default function ComplianceCourtPage() {
           hasSavedGame={hasSavedGame}
           onContinue={continueGame}
           onNewGame={startNewGame}
+          onOptions={() => dispatch({ type: 'GO_TO_OPTIONS' })}
         />
       )}
 
@@ -80,6 +83,10 @@ export default function ComplianceCourtPage() {
 
       {state.screen === 'debrief' && (
         <Debrief dispatch={dispatch} />
+      )}
+
+      {state.screen === 'options' && (
+        <Options state={state} dispatch={dispatch} onClearSave={clearSave} />
       )}
     </main>
   )
