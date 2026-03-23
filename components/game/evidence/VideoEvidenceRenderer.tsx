@@ -2,9 +2,10 @@
 
 // ── VideoEvidenceRenderer ─────────────────────────────────────────────────────
 // Renders a video evidence card in the Court Record / Expediente.
-// Shows a thumbnail/header collapsed by default; expands to inline video player.
+// Supports Google Drive embed URLs (drive.google.com/file/d/.../preview)
+// or any direct video src via <video> tag.
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { VideoMeta } from '@/lib/gameData'
 import { PlayCircle, ChevronDown, ChevronUp, Video } from 'lucide-react'
@@ -15,20 +16,21 @@ interface VideoRendererProps {
   onRead?: () => void
 }
 
+function isDriveEmbed(src: string) {
+  return src.includes('drive.google.com') || src.startsWith('https://docs.google.com')
+}
+
 export function VideoRenderer({ meta, isKey, onRead }: VideoRendererProps) {
   const [opened, setOpened] = useState(false)
-  const videoRef = useRef<HTMLVideoElement>(null)
 
   function handleToggle() {
-    setOpened((o) => !o)
-    if (!opened) {
-      // Mark as read when opened
-      onRead?.()
-    } else {
-      // Pause when collapsing
-      videoRef.current?.pause()
-    }
+    setOpened((o) => {
+      if (!o) onRead?.()   // mark as read when first opened
+      return !o
+    })
   }
+
+  const useIframe = isDriveEmbed(meta.src)
 
   return (
     <div
@@ -94,17 +96,26 @@ export function VideoRenderer({ meta, isKey, onRead }: VideoRendererProps) {
               {meta.description}
             </p>
           )}
-          <div className="rounded overflow-hidden border border-amber-700/30 bg-black">
-            <video
-              ref={videoRef}
-              src={meta.src}
-              poster={meta.poster}
-              controls
-              className="w-full max-h-64 object-contain"
-              onPlay={() => onRead?.()}
-            >
-              Tu navegador no soporta reproducción de video.
-            </video>
+          <div className="rounded overflow-hidden border border-amber-700/30 bg-black aspect-video">
+            {useIframe ? (
+              <iframe
+                src={meta.src}
+                className="w-full h-full"
+                allow="autoplay"
+                allowFullScreen
+                title={meta.title}
+              />
+            ) : (
+              <video
+                src={meta.src}
+                poster={meta.poster}
+                controls
+                className="w-full h-full object-contain"
+                onPlay={() => onRead?.()}
+              >
+                Tu navegador no soporta reproducción de video.
+              </video>
+            )}
           </div>
         </div>
       )}

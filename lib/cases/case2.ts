@@ -105,7 +105,7 @@ export const case2: Case = {
       displayType: 'video',
       isKey: true,
       videoMeta: {
-        src: '/videos/asesor-legal-conflicto-interes.mp4',
+        src: 'https://drive.google.com/file/d/1leAZm5X0TLsOeHBjAFl4GKXh7gKMPNZ3/preview',
         title: 'Conflictos de Interés: Lo que debes saber',
         description: 'El Asesor Legal explica qué es un conflicto de interés, cuándo debe declararse, y cómo debe conducirse una revisión de cumplimiento. Referencia: Política Interna de Ética — Art. 7.',
       },
