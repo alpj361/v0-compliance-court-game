@@ -1,9 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { GameState, GameAction } from '@/lib/gameEngine'
 import { EvidenceCard } from '@/components/game/EvidenceCard'
-import { Gavel, FolderOpen } from 'lucide-react'
+import { Gavel, FolderOpen, Play, X } from 'lucide-react'
 
 interface InvestigationProps {
   state: GameState
@@ -11,6 +12,7 @@ interface InvestigationProps {
 }
 
 export function Investigation({ state, dispatch }: InvestigationProps) {
+  const [showVideo, setShowVideo] = useState(false)
   const { activeCase, evidenceReviewed } = state
   if (!activeCase) return null
 
@@ -111,6 +113,29 @@ export function Investigation({ state, dispatch }: InvestigationProps) {
           </div>
         )}
 
+        {/* Pre-trial advisor video — only shown if case has a preTrialVideo */}
+        {activeCase.preTrialVideo && (
+          <button
+            onClick={() => setShowVideo(true)}
+            className="flex items-center gap-3 w-full rounded-sm border border-blue-600/30 bg-blue-900/10 px-4 py-3 hover:bg-blue-900/20 hover:border-blue-500/50 transition-all duration-200 group text-left"
+          >
+            <div className="shrink-0 w-8 h-8 rounded-full bg-blue-700/30 border border-blue-600/40 flex items-center justify-center group-hover:bg-blue-700/50 transition-colors">
+              <Play size={12} className="text-blue-400 ml-0.5" />
+            </div>
+            <div>
+              <div className="text-[9px] font-mono tracking-[0.35em] uppercase text-blue-400/60 mb-0.5">
+                Mensaje de tu Abogado
+              </div>
+              <div className="text-sm font-serif text-blue-200 leading-tight">
+                Ver video de {activeCase.preTrialVideo.speakerName}
+              </div>
+              <div className="text-[11px] text-blue-400/50 font-mono mt-0.5">
+                {activeCase.preTrialVideo.speakerTitle}
+              </div>
+            </div>
+          </button>
+        )}
+
         {/* Evidence list */}
         <div className="flex flex-col gap-4">
           {activeCase.evidence.map((card) => (
@@ -152,6 +177,57 @@ export function Investigation({ state, dispatch }: InvestigationProps) {
           </button>
         </div>
       </div>
+      {/* Hartman / pre-trial video modal */}
+      {showVideo && activeCase.preTrialVideo && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setShowVideo(false)}
+        >
+          <div
+            className="relative w-full max-w-lg bg-court-navy border border-blue-600/40 rounded-sm shadow-2xl shadow-blue-900/30"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div className="flex items-start justify-between gap-4 border-b border-blue-600/20 px-5 py-4">
+              <div>
+                <div className="text-[9px] font-mono tracking-[0.35em] uppercase text-blue-400/60 mb-1">
+                  Mensaje Privado — Solo para el Abogado
+                </div>
+                <div className="font-serif text-base font-bold text-court-white">
+                  {activeCase.preTrialVideo.speakerName}
+                </div>
+                <div className="text-xs text-blue-400/60 font-mono mt-0.5">
+                  {activeCase.preTrialVideo.speakerTitle}
+                </div>
+              </div>
+              <button
+                onClick={() => setShowVideo(false)}
+                className="shrink-0 mt-0.5 p-1.5 rounded-sm border border-border text-muted-foreground hover:text-court-white hover:border-blue-500/40 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Video lines */}
+            <div className="px-5 py-5 flex flex-col gap-3">
+              {activeCase.preTrialVideo.lines.map((line, i) => (
+                <p key={i} className="text-sm font-sans text-court-white/85 leading-relaxed">
+                  {line}
+                </p>
+              ))}
+            </div>
+
+            <div className="border-t border-blue-600/20 px-5 py-3 flex justify-end">
+              <button
+                onClick={() => setShowVideo(false)}
+                className="text-xs font-mono tracking-wider uppercase text-blue-400/70 hover:text-blue-300 transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

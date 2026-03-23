@@ -194,6 +194,12 @@ export interface CaseVocab {
   wrongEvidenceFeedback?: string
 }
 
+export interface PreTrialVideo {
+  speakerName: string
+  speakerTitle: string
+  lines: string[]
+}
+
 export interface Case {
   id: string
   gameId: GameId
@@ -206,6 +212,7 @@ export interface Case {
   firstSceneId: string
   scenes: Record<string, Scene>
   vocab?: CaseVocab
+  preTrialVideo?: PreTrialVideo
   // Dynamic verdict routing based on final credibility (descending order)
   verdictRoutes?: { minCredibility: number; sceneId: string }[]
   // Scene to show if the 15-minute trial timer expires
