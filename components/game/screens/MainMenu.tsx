@@ -3,19 +3,26 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import type { GameAction, GameMode } from '@/lib/gameEngine'
-import { Layers, MessageSquare, Lock } from 'lucide-react'
+import type { GameMode } from '@/lib/gameEngine'
+import { Layers, MessageSquare, Lock, Play, RotateCcw } from 'lucide-react'
 
 interface MainMenuProps {
-  dispatch: React.Dispatch<GameAction>
+  hasSavedGame: boolean
+  onContinue: () => void
+  onNewGame: (mode: GameMode) => void
 }
 
-export function MainMenu({ dispatch }: MainMenuProps) {
+export function MainMenu({ hasSavedGame, onContinue, onNewGame }: MainMenuProps) {
   const [selectedMode, setSelectedMode] = useState<GameMode>('chat')
+  const [confirmNew, setConfirmNew] = useState(false)
 
   function handleStart() {
-    dispatch({ type: 'SET_GAME_MODE', payload: selectedMode })
-    dispatch({ type: 'START_GAME' })
+    if (hasSavedGame && !confirmNew) {
+      // First click when save exists: ask confirmation
+      setConfirmNew(true)
+      return
+    }
+    onNewGame(selectedMode)
   }
 
   return (
@@ -54,54 +61,111 @@ export function MainMenu({ dispatch }: MainMenuProps) {
           Two cases. Two sides of the same argument. One pattern you might recognize in yourself.
         </p>
 
-        {/* Mode selector */}
-        <div className="flex flex-col items-center gap-3 w-full max-w-sm">
-          <p className="text-[10px] font-mono tracking-[0.25em] uppercase text-court-grey">Select experience mode</p>
-          <div className="flex gap-3 w-full">
-            <button
-              onClick={() => setSelectedMode('chat')}
-              className={cn(
-                'flex-1 flex flex-col items-center gap-2 px-4 py-4 border rounded-sm transition-all duration-150 text-left',
-                selectedMode === 'chat'
-                  ? 'border-court-gold bg-court-gold/10 text-court-white'
-                  : 'border-border bg-court-navy-light text-muted-foreground hover:border-court-gold/40'
-              )}
-            >
-              <MessageSquare size={18} className={selectedMode === 'chat' ? 'text-court-gold' : 'text-muted-foreground'} />
-              <span className="text-xs font-mono tracking-wider uppercase">Chat Thread</span>
-              <span className="text-[10px] font-sans text-muted-foreground leading-snug text-center">Conversation-style. No portraits.</span>
-            </button>
-            <div className="relative flex-1">
-              <div
+        {/* Mode selector — only shown when no save or confirming new game */}
+        {(!hasSavedGame || confirmNew) && (
+          <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+            <p className="text-[10px] font-mono tracking-[0.25em] uppercase text-court-grey">Select experience mode</p>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => setSelectedMode('chat')}
                 className={cn(
-                  'flex flex-col items-center gap-2 px-4 py-4 border rounded-sm text-left',
-                  'border-border bg-court-navy-light text-muted-foreground/40 cursor-not-allowed opacity-60'
+                  'flex-1 flex flex-col items-center gap-2 px-4 py-4 border rounded-sm transition-all duration-150 text-left',
+                  selectedMode === 'chat'
+                    ? 'border-court-gold bg-court-gold/10 text-court-white'
+                    : 'border-border bg-court-navy-light text-muted-foreground hover:border-court-gold/40'
                 )}
               >
-                <Layers size={18} className="text-muted-foreground/40" />
-                <span className="text-xs font-mono tracking-wider uppercase">Visual Novel</span>
-                <span className="text-[10px] font-sans text-muted-foreground/50 leading-snug text-center">Courtroom scene with dialogue box.</span>
-              </div>
-              <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 bg-court-navy border border-court-gold/60 rounded-sm">
-                <Lock size={8} className="text-court-gold/80" />
-                <span className="text-[8px] font-mono tracking-widest uppercase text-court-gold/80">Próximamente</span>
+                <MessageSquare size={18} className={selectedMode === 'chat' ? 'text-court-gold' : 'text-muted-foreground'} />
+                <span className="text-xs font-mono tracking-wider uppercase">Chat Thread</span>
+                <span className="text-[10px] font-sans text-muted-foreground leading-snug text-center">Conversation-style. No portraits.</span>
+              </button>
+              <div className="relative flex-1">
+                <div
+                  className={cn(
+                    'flex flex-col items-center gap-2 px-4 py-4 border rounded-sm text-left',
+                    'border-border bg-court-navy-light text-muted-foreground/40 cursor-not-allowed opacity-60'
+                  )}
+                >
+                  <Layers size={18} className="text-muted-foreground/40" />
+                  <span className="text-xs font-mono tracking-wider uppercase">Visual Novel</span>
+                  <span className="text-[10px] font-sans text-muted-foreground/50 leading-snug text-center">Courtroom scene with dialogue box.</span>
+                </div>
+                <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 bg-court-navy border border-court-gold/60 rounded-sm">
+                  <Lock size={8} className="text-court-gold/80" />
+                  <span className="text-[8px] font-mono tracking-widest uppercase text-court-gold/80">Próximamente</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* CTA */}
-        <button
-          onClick={handleStart}
-          className={cn(
-            'px-10 py-4 font-serif font-bold text-lg tracking-widest uppercase',
-            'bg-court-red border-2 border-court-red-bright text-court-white',
-            'hover:bg-court-red-bright hover:shadow-[0_0_24px_rgba(200,16,46,0.5)]',
-            'transition-all duration-200 active:scale-95'
+        {/* CTA area */}
+        <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+
+          {/* Continue saved game — primary CTA when save exists */}
+          {hasSavedGame && !confirmNew && (
+            <button
+              onClick={onContinue}
+              className={cn(
+                'w-full flex items-center justify-center gap-3 px-10 py-4 font-serif font-bold text-lg tracking-widest uppercase',
+                'bg-court-gold text-court-navy border-2 border-court-gold-light',
+                'hover:bg-court-gold-light hover:shadow-[0_0_24px_rgba(212,160,23,0.4)]',
+                'transition-all duration-200 active:scale-95'
+              )}
+            >
+              <Play size={18} />
+              Continuar Partida
+            </button>
           )}
-        >
-          Begin Trial
-        </button>
+
+          {/* New game / Begin trial */}
+          {confirmNew ? (
+            <div className="flex flex-col items-center gap-2 w-full">
+              <p className="text-xs font-mono text-court-red/80 tracking-wider">
+                ¿Seguro? Se perderá la partida guardada.
+              </p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={handleStart}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-2 px-6 py-3 font-serif font-bold text-sm tracking-widest uppercase',
+                    'bg-court-red border-2 border-court-red-bright text-court-white',
+                    'hover:bg-court-red-bright transition-all duration-200 active:scale-95'
+                  )}
+                >
+                  <RotateCcw size={14} />
+                  Empezar de nuevo
+                </button>
+                <button
+                  onClick={() => setConfirmNew(false)}
+                  className="flex-1 px-6 py-3 font-mono text-xs tracking-widest uppercase border border-border text-muted-foreground hover:border-court-grey hover:text-foreground transition-all"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={handleStart}
+              className={cn(
+                hasSavedGame
+                  ? 'w-full flex items-center justify-center gap-2 px-8 py-3 font-mono text-xs tracking-widest uppercase border border-border text-muted-foreground hover:border-court-red/50 hover:text-court-red/80 transition-all'
+                  : cn(
+                    'px-10 py-4 font-serif font-bold text-lg tracking-widest uppercase',
+                    'bg-court-red border-2 border-court-red-bright text-court-white',
+                    'hover:bg-court-red-bright hover:shadow-[0_0_24px_rgba(200,16,46,0.5)]',
+                    'transition-all duration-200 active:scale-95'
+                  )
+              )}
+            >
+              {hasSavedGame ? (
+                <><RotateCcw size={12} /> Nueva partida</>
+              ) : (
+                'Begin Trial'
+              )}
+            </button>
+          )}
+        </div>
 
         <p className="text-xs text-muted-foreground font-mono">
           Player: Nicolas — Banking Agent &amp; Law Student
@@ -110,7 +174,9 @@ export function MainMenu({ dispatch }: MainMenuProps) {
 
       <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10">
         <div className="text-[9px] font-mono tracking-[0.3em] uppercase text-muted-foreground">
-          Select mode, then press &quot;Begin Trial&quot;
+          {hasSavedGame
+            ? 'Partida guardada detectada — puedes continuar donde lo dejaste'
+            : 'Select mode, then press "Begin Trial"'}
         </div>
       </div>
     </div>
