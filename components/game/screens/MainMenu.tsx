@@ -4,15 +4,16 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { GameMode } from '@/lib/gameEngine'
-import { Layers, MessageSquare, Lock, Play, RotateCcw } from 'lucide-react'
+import { Layers, MessageSquare, Lock, Play, RotateCcw, Settings } from 'lucide-react'
 
 interface MainMenuProps {
   hasSavedGame: boolean
   onContinue: () => void
   onNewGame: (mode: GameMode) => void
+  onOptions: () => void
 }
 
-export function MainMenu({ hasSavedGame, onContinue, onNewGame }: MainMenuProps) {
+export function MainMenu({ hasSavedGame, onContinue, onNewGame, onOptions }: MainMenuProps) {
   const [selectedMode, setSelectedMode] = useState<GameMode>('chat')
   const [confirmNew, setConfirmNew] = useState(false)
 
@@ -166,6 +167,14 @@ export function MainMenu({ hasSavedGame, onContinue, onNewGame }: MainMenuProps)
             </button>
           )}
         </div>
+
+        <button
+          onClick={onOptions}
+          className="flex items-center gap-2 text-[10px] font-mono tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Settings size={11} />
+          Opciones
+        </button>
 
         <p className="text-xs text-muted-foreground font-mono">
           Player: Nicolas — Banking Agent &amp; Law Student

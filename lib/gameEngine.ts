@@ -159,6 +159,7 @@ export type GameScreen =
   | 'argument-builder'   // Case 2 Ch3 multi-select closing
   | 'verdict'
   | 'debrief'
+  | 'options'
 
 export type OverlayType = 'OBJECTION' | 'HOLD IT' | 'TAKE THAT' | null
 
@@ -249,6 +250,8 @@ export type GameAction =
   | { type: 'RESTART_CASE' }
   | { type: 'GO_TO_CASE_SELECT' }
   | { type: 'GO_TO_MAIN_MENU' }
+  | { type: 'GO_TO_OPTIONS' }
+  | { type: 'SET_CASE_COMPLETE'; payload: { caseId: 'case-1' | 'case-2'; complete: boolean } }
   | { type: 'LOAD_SAVED_STATE'; payload: Partial<GameState> }
 
 function getCurrentScene(state: GameState): Scene | null {
@@ -269,7 +272,14 @@ function resolveVerdictSceneId(state: GameState, fallbackSceneId?: string): stri
 /** Navigate to verdict screen using credibility-gated routing */
 function navigateToVerdict(state: GameState, fallbackSceneId?: string): GameState {
   const sceneId = resolveVerdictSceneId(state, fallbackSceneId)
-  return { ...state, screen: 'verdict', currentSceneId: sceneId, trialTimerActive: false }
+  return {
+    ...state,
+    screen: 'verdict',
+    currentSceneId: sceneId,
+    trialTimerActive: false,
+    case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
+    case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+  }
 }
 
 function getCurrentDialogue(state: GameState): DialogueLine | null {
@@ -369,6 +379,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         trialTimeLeft: 0,
         screen: 'verdict',
         currentSceneId: postponedSceneId,
+        case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
+        case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
       }
     }
 
@@ -493,7 +505,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
       // Scene finished
       if (scene.isVerdictScene) {
-        return { ...state, screen: 'verdict', trialTimerActive: false }
+        return {
+          ...state,
+          screen: 'verdict',
+          trialTimerActive: false,
+          case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
+          case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+        }
       }
 
       if (scene.nextSceneId && state.activeCase?.scenes[scene.nextSceneId]) {
@@ -761,6 +779,16 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'GO_TO_CASE_SELECT':
       return { ...state, screen: 'case-select', activeCase: null }
 
+    case 'GO_TO_OPTIONS':
+      return { ...state, screen: 'options' }
+
+    case 'SET_CASE_COMPLETE':
+      return {
+        ...state,
+        case1Complete: action.payload.caseId === 'case-1' ? action.payload.complete : state.case1Complete,
+        case2Complete: action.payload.caseId === 'case-2' ? action.payload.complete : state.case2Complete,
+      }
+
     case 'GO_TO_MAIN_MENU':
       return { ...initialState }
 
@@ -837,6 +865,7 @@ export function useGameEngine() {
     hasSavedGame,
     continueGame,
     startNewGame,
+    clearSave: clearPersistSave,
     currentScene,
     currentDialogue,
     isChoicePoint,
