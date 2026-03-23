@@ -176,6 +176,9 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
 
   if (!activeCase) return null
 
+  const recordLabel = activeCase.vocab?.recordLabel ?? 'Court Record'
+  const credibilityLabel = activeCase.vocab?.credibilityLabel
+
   const timedSeconds = currentDialogue.timedSeconds ?? 10
   const timerPct = timedObjectionActive ? (timerLeft / timedSeconds) * 100 : 100
   const style = getSpeakerStyle(currentDialogue.side)
@@ -208,7 +211,7 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
             {String(trialMins).padStart(2, '0')}:{String(trialSecs).padStart(2, '0')}
           </div>
         )}
-        <CredibilityMeter value={credibility} isHit={isWrongAnswerShaking} />
+        <CredibilityMeter value={credibility} isHit={isWrongAnswerShaking} label={credibilityLabel} />
         <button
           onClick={() => setCourtRecordOpen(!courtRecordOpen)}
           className={cn(
@@ -220,7 +223,7 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
           )}
         >
           <BookOpen size={11} />
-          Record
+          {recordLabel}
           {pendingEvidencePresentation && <span className="ml-0.5">↑</span>}
         </button>
       </div>
@@ -228,12 +231,47 @@ export function TrialChat({ state, dispatch, currentDialogue, isChoicePoint, cle
       {/* Court Record drawer */}
       {courtRecordOpen && (
         <div className="shrink-0 max-h-[45vh] overflow-y-auto bg-court-navy-mid border-b border-court-gold/40 shadow-xl px-4 py-3 flex flex-col gap-3 z-10">
-          <div className="text-[10px] font-mono tracking-widest uppercase text-court-gold pb-1 border-b border-border">
-            Court Record — Evidence
+          <div className="text-[10px] font-mono tracking-widest uppercase text-court-gold pb-1 border-b border-border flex items-center justify-between">
+            <span>{recordLabel} — {activeCase.vocab?.evidenceLabel ?? 'Evidence'}</span>
+            {pendingEvidencePresentation && (
+              <span className="text-court-gold/60 text-[9px]">Selecciona la evidencia a presentar</span>
+            )}
           </div>
-          {activeCase.evidence.map((card) => (
-            <EvidenceCard key={card.id} card={card} isReviewed={evidenceReviewed.has(card.id)} />
-          ))}
+          {activeCase.evidence.map((card) => {
+            const isRelevant = relevantIds.has(card.id)
+            const isCorrectCard = correctIds.has(card.id)
+            const alreadyPresented = lastPresentedEvidenceId === card.id
+            return (
+              <div key={card.id} className={cn(
+                'relative transition-all duration-150',
+                pendingEvidencePresentation && isRelevant && 'ring-2 ring-court-gold/60 ring-offset-1 ring-offset-court-navy-mid rounded-sm'
+              )}>
+                {pendingEvidencePresentation && isRelevant && (
+                  <div className="absolute -top-2 -right-2 z-10 flex items-center gap-1 bg-court-gold text-court-navy text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full">
+                    {alreadyPresented ? <CheckCircle2 size={9} /> : <FileSearch size={9} />}
+                    {alreadyPresented ? 'Presentada' : 'Relevante'}
+                  </div>
+                )}
+                <EvidenceCard key={card.id} card={card} isReviewed={evidenceReviewed.has(card.id)} />
+                {pendingEvidencePresentation && !alreadyPresented && (
+                  <button
+                    onClick={() => {
+                      dispatch({ type: 'PRESENT_EVIDENCE', payload: card.id })
+                      setCourtRecordOpen(false)
+                    }}
+                    className={cn(
+                      'mt-2 w-full py-2 text-xs font-mono font-bold tracking-widest uppercase border transition-all duration-150',
+                      isCorrectCard
+                        ? 'border-court-gold/60 text-court-gold bg-court-gold/10 hover:bg-court-gold/20'
+                        : 'border-border text-muted-foreground hover:border-court-grey hover:text-foreground'
+                    )}
+                  >
+                    Presentar esta evidencia
+                  </button>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 

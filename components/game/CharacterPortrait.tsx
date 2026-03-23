@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { Portrait, CharacterSide } from '@/lib/gameData'
 
@@ -28,6 +29,27 @@ const PORTRAIT_MAP: Record<Portrait, string> = {
   'nicolas-thinking':           '/portraits/nicolas-thinking.jpg',
   'nicolas-shocked':            '/portraits/nicolas-shocked.jpg',
   'compliance-officer-neutral': '/portraits/compliance-officer-neutral.jpg',
+  // On the Field characters — images may not exist yet; fallback handled below
+  'garcia-neutral':             '/portraits/garcia-neutral.jpg',
+  'garcia-worried':             '/portraits/garcia-worried.jpg',
+  'reyes-arrogant':             '/portraits/reyes-arrogant.jpg',
+  'reyes-backing-down':         '/portraits/reyes-backing-down.jpg',
+  'vargas-agent-calm':          '/portraits/vargas-agent-calm.jpg',
+  'vargas-agent-pressing':      '/portraits/vargas-agent-pressing.jpg',
+  'mendoza-friendly':           '/portraits/mendoza-friendly.jpg',
+  'mendoza-threatening':        '/portraits/mendoza-threatening.jpg',
+}
+
+// Initials for fallback badges when image doesn't exist
+const PORTRAIT_INITIALS: Partial<Record<Portrait, string>> = {
+  'garcia-neutral':        'DF',
+  'garcia-worried':        'DF',
+  'reyes-arrogant':        'MR',
+  'reyes-backing-down':    'MR',
+  'vargas-agent-calm':     'RV',
+  'vargas-agent-pressing': 'RV',
+  'mendoza-friendly':      'EM',
+  'mendoza-threatening':   'EM',
 }
 
 interface CharacterPortraitProps {
@@ -40,6 +62,9 @@ interface CharacterPortraitProps {
 
 export function CharacterPortrait({ portrait, side, speaker, isActive = true, className }: CharacterPortraitProps) {
   const src = PORTRAIT_MAP[portrait]
+  const [imgError, setImgError] = useState(false)
+  const initials = PORTRAIT_INITIALS[portrait]
+  const showFallback = imgError && initials
 
   return (
     <div
@@ -58,14 +83,21 @@ export function CharacterPortrait({ portrait, side, speaker, isActive = true, cl
         )}
         style={{ width: 220, height: 320 }}
       >
-        <Image
-          src={src}
-          alt={speaker}
-          fill
-          className="object-cover object-top"
-          sizes="220px"
-          priority
-        />
+        {showFallback ? (
+          <div className="w-full h-full flex items-center justify-center bg-court-navy-mid">
+            <span className="font-serif font-bold text-5xl text-court-gold/60">{initials}</span>
+          </div>
+        ) : (
+          <Image
+            src={src}
+            alt={speaker}
+            fill
+            className="object-cover object-top"
+            sizes="220px"
+            priority
+            onError={() => setImgError(true)}
+          />
+        )}
         {/* Gradient vignette at bottom */}
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-court-navy to-transparent" />
       </div>

@@ -4,17 +4,22 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { GameMode } from '@/lib/gameEngine'
-import { Layers, MessageSquare, Lock, Play, RotateCcw, Settings } from 'lucide-react'
+import type { GameId } from '@/lib/gameData'
+import { Layers, MessageSquare, Lock, Play, RotateCcw, Settings, ChevronLeft } from 'lucide-react'
 
 interface MainMenuProps {
+  currentGame: GameId | null
   hasSavedGame: boolean
   onContinue: () => void
   onNewGame: (mode: GameMode) => void
   onOptions: () => void
+  onGoToGameSelect: () => void
 }
 
-export function MainMenu({ hasSavedGame, onContinue, onNewGame, onOptions }: MainMenuProps) {
+export function MainMenu({ currentGame, hasSavedGame, onContinue, onNewGame, onOptions, onGoToGameSelect }: MainMenuProps) {
   const [selectedMode, setSelectedMode] = useState<GameMode>('chat')
+
+  const isOTF = currentGame === 'on-the-field'
   const [confirmNew, setConfirmNew] = useState(false)
 
   function handleStart() {
@@ -43,23 +48,46 @@ export function MainMenu({ hasSavedGame, onContinue, onNewGame, onOptions }: Mai
       <div className="relative z-10 flex flex-col items-center gap-8 px-4 text-center">
         {/* Title */}
         <div className="flex flex-col items-center gap-2">
-          <div className="text-[10px] font-mono tracking-[0.35em] uppercase text-court-gold border border-court-gold/40 px-4 py-1">
-            Banking Compliance Training Series
-          </div>
-          <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight text-balance text-court-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-            COMPLIANCE
-          </h1>
-          <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight text-balance text-court-gold drop-shadow-[0_2px_12px_rgba(212,160,23,0.4)]">
-            COURT
-          </h1>
-          <div className="w-48 h-px bg-court-gold/60 mt-1" />
-          <p className="text-court-grey text-sm font-sans tracking-widest uppercase mt-1">
-            The Case Against Overconfidence
-          </p>
+          {isOTF ? (
+            <>
+              <div className="text-[10px] font-mono tracking-[0.35em] uppercase text-green-400 border border-green-600/40 px-4 py-1">
+                Football Leadership Series
+              </div>
+              <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight text-balance text-court-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+                ON THE
+              </h1>
+              <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight text-balance text-green-400 drop-shadow-[0_2px_12px_rgba(34,197,94,0.4)]">
+                FIELD
+              </h1>
+              <div className="w-48 h-px bg-green-500/60 mt-1" />
+              <p className="text-court-grey text-sm font-sans tracking-widest uppercase mt-1">
+                Football Leadership
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="text-[10px] font-mono tracking-[0.35em] uppercase text-court-gold border border-court-gold/40 px-4 py-1">
+                Banking Compliance Training Series
+              </div>
+              <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight text-balance text-court-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+                COMPLIANCE
+              </h1>
+              <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight text-balance text-court-gold drop-shadow-[0_2px_12px_rgba(212,160,23,0.4)]">
+                COURT
+              </h1>
+              <div className="w-48 h-px bg-court-gold/60 mt-1" />
+              <p className="text-court-grey text-sm font-sans tracking-widest uppercase mt-1">
+                The Case Against Overconfidence
+              </p>
+            </>
+          )}
         </div>
 
         <p className="max-w-md text-court-white/80 text-base leading-relaxed font-sans">
-          Two cases. Two sides of the same argument. One pattern you might recognize in yourself.
+          {isOTF
+            ? 'Un caso. Quince minutos. El vestuario espera tu decisión.'
+            : 'Two cases. Two sides of the same argument. One pattern you might recognize in yourself.'
+          }
         </p>
 
         {/* Mode selector — only shown when no save or confirming new game */}
@@ -153,14 +181,17 @@ export function MainMenu({ hasSavedGame, onContinue, onNewGame, onOptions }: Mai
                   ? 'w-full flex items-center justify-center gap-2 px-8 py-3 font-mono text-xs tracking-widest uppercase border border-border text-muted-foreground hover:border-court-red/50 hover:text-court-red/80 transition-all'
                   : cn(
                     'px-10 py-4 font-serif font-bold text-lg tracking-widest uppercase',
-                    'bg-court-red border-2 border-court-red-bright text-court-white',
-                    'hover:bg-court-red-bright hover:shadow-[0_0_24px_rgba(200,16,46,0.5)]',
+                    isOTF
+                      ? 'bg-green-600 border-2 border-green-400 text-white hover:bg-green-500 hover:shadow-[0_0_24px_rgba(34,197,94,0.5)]'
+                      : 'bg-court-red border-2 border-court-red-bright text-court-white hover:bg-court-red-bright hover:shadow-[0_0_24px_rgba(200,16,46,0.5)]',
                     'transition-all duration-200 active:scale-95'
                   )
               )}
             >
               {hasSavedGame ? (
                 <><RotateCcw size={12} /> Nueva partida</>
+              ) : isOTF ? (
+                'Iniciar Partida'
               ) : (
                 'Begin Trial'
               )}
@@ -168,16 +199,26 @@ export function MainMenu({ hasSavedGame, onContinue, onNewGame, onOptions }: Mai
           )}
         </div>
 
-        <button
-          onClick={onOptions}
-          className="flex items-center gap-2 text-[10px] font-mono tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Settings size={11} />
-          Opciones
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onOptions}
+            className="flex items-center gap-2 text-[10px] font-mono tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Settings size={11} />
+            Opciones
+          </button>
+          <span className="text-muted-foreground/30 text-[10px]">|</span>
+          <button
+            onClick={onGoToGameSelect}
+            className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronLeft size={10} />
+            Cambiar juego
+          </button>
+        </div>
 
         <p className="text-xs text-muted-foreground font-mono">
-          Player: Nicolas — Banking Agent &amp; Law Student
+          {isOTF ? 'Asistente Técnico — Guatemala City FC' : 'Player: Nicolas — Banking Agent & Law Student'}
         </p>
       </div>
 

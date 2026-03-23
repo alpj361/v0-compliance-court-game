@@ -5,9 +5,10 @@ import { cn } from '@/lib/utils'
 interface CredibilityMeterProps {
   value: number   // 0–100
   isHit?: boolean
+  label?: string
 }
 
-export function CredibilityMeter({ value, isHit }: CredibilityMeterProps) {
+export function CredibilityMeter({ value, isHit, label = 'Credibility' }: CredibilityMeterProps) {
   const color =
     value > 60 ? 'bg-court-gold' :
     value > 30 ? 'bg-amber-500' :
@@ -21,7 +22,7 @@ export function CredibilityMeter({ value, isHit }: CredibilityMeterProps) {
   return (
     <div className={cn('flex flex-col items-end gap-1', isHit && 'animate-credibility-hit')}>
       <div className="text-[10px] font-serif tracking-[0.2em] uppercase text-court-grey">
-        Credibility
+        {label}
       </div>
       <div className="flex gap-0.5">
         {segments.map((filled, i) => (

@@ -19,18 +19,27 @@ export function Investigation({ state, dispatch }: InvestigationProps) {
   const allRead = reviewedCount === totalCards
   const progressPct = Math.round((reviewedCount / totalCards) * 100)
 
+  const isOTF = activeCase.gameId === 'on-the-field'
+  const recordLabel = activeCase.vocab?.recordLabel ?? 'Court Record'
+  const trialLabel = activeCase.vocab?.trialLabel ?? 'Enter Courtroom'
+  const accentColor = isOTF ? 'text-green-400' : 'text-court-gold'
+  const accentBg = isOTF ? 'bg-green-700/15 border-green-600/30' : 'bg-court-gold/15 border-court-gold/30'
+  const ctaBg = isOTF
+    ? 'bg-green-600 border-2 border-green-400 text-white hover:bg-green-500 hover:shadow-[0_0_28px_rgba(34,197,94,0.5)]'
+    : 'bg-court-red border-2 border-court-red-bright text-court-white hover:bg-court-red-bright hover:shadow-[0_0_28px_rgba(200,16,46,0.5)]'
+
   return (
     <div className="relative w-full min-h-screen flex flex-col bg-court-navy">
       {/* Top header bar */}
       <div className="sticky top-0 z-20 bg-court-navy/95 border-b border-border backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-court-gold/15 border border-court-gold/30 rounded-sm">
-              <FolderOpen size={16} className="text-court-gold" />
+            <div className={cn('p-2 border rounded-sm', accentBg)}>
+              <FolderOpen size={16} className={accentColor} />
             </div>
             <div>
-              <div className="text-[9px] font-mono tracking-[0.35em] uppercase text-court-gold/60">
-                Court Record — Evidence Review
+              <div className={cn('text-[9px] font-mono tracking-[0.35em] uppercase opacity-60', accentColor)}>
+                {recordLabel} — {isOTF ? 'Revisión' : 'Evidence Review'}
               </div>
               <h2 className="font-serif text-base font-bold text-court-white leading-tight">
                 {activeCase.title}
@@ -85,16 +94,20 @@ export function Investigation({ state, dispatch }: InvestigationProps) {
 
         {/* Instruction */}
         {!allRead && (
-          <div className="rounded-sm border border-court-gold/25 bg-court-gold/5 px-4 py-3 text-sm text-court-gold/75 font-sans leading-relaxed">
-            Open each piece of evidence below. Read the full content carefully.
-            You must review all <strong>{totalCards} items</strong> before you can enter the courtroom.
-            <span className="text-court-gold/50"> — {totalCards - reviewedCount} remaining.</span>
+          <div className={cn('rounded-sm border px-4 py-3 text-sm font-sans leading-relaxed', isOTF ? 'border-green-600/25 bg-green-900/5 text-green-400/75' : 'border-court-gold/25 bg-court-gold/5 text-court-gold/75')}>
+            {isOTF
+              ? <>Abre cada informe y léelo con cuidado. Debes revisar los <strong>{totalCards} informes</strong> antes de iniciar la reunión. <span className={isOTF ? 'text-green-500/50' : 'text-court-gold/50'}> — {totalCards - reviewedCount} restantes.</span></>
+              : <>Open each piece of evidence below. Read the full content carefully. You must review all <strong>{totalCards} items</strong> before you can enter the courtroom. <span className="text-court-gold/50"> — {totalCards - reviewedCount} remaining.</span></>
+            }
           </div>
         )}
 
         {allRead && (
           <div className="rounded-sm border border-green-500/30 bg-green-900/10 px-4 py-3 text-sm text-green-400/80 font-sans leading-relaxed">
-            All evidence reviewed. You know what happened. Now prove it in court.
+            {isOTF
+              ? 'Todos los informes revisados. Conoces la situación. Ahora resuélvela.'
+              : 'All evidence reviewed. You know what happened. Now prove it in court.'
+            }
           </div>
         )}
 
@@ -111,24 +124,23 @@ export function Investigation({ state, dispatch }: InvestigationProps) {
           ))}
         </div>
 
-        {/* Enter courtroom */}
+        {/* Enter courtroom / Start meeting */}
         <div className="flex flex-col items-center gap-4 pt-6 pb-8 border-t border-border">
           {allRead ? (
             <button
               onClick={() => dispatch({ type: 'START_TRIAL' })}
               className={cn(
                 'flex items-center gap-2 px-10 py-4 font-serif font-bold text-base tracking-widest uppercase',
-                'bg-court-red border-2 border-court-red-bright text-court-white',
-                'hover:bg-court-red-bright hover:shadow-[0_0_28px_rgba(200,16,46,0.5)]',
+                ctaBg,
                 'transition-all duration-200 active:scale-95'
               )}
             >
               <Gavel size={18} />
-              Enter Courtroom
+              {trialLabel}
             </button>
           ) : (
             <p className="text-xs text-muted-foreground font-mono text-center">
-              {totalCards - reviewedCount} evidence item{totalCards - reviewedCount !== 1 ? 's' : ''} remaining before you can proceed
+              {totalCards - reviewedCount} {isOTF ? 'informe' : 'evidence item'}{totalCards - reviewedCount !== 1 ? 's' : ''} {isOTF ? 'restante' : 'remaining'} antes de continuar
             </p>
           )}
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useGameEngine } from '@/lib/gameEngine'
+import { GameSelect }     from '@/components/game/screens/GameSelect'
 import { MainMenu }        from '@/components/game/screens/MainMenu'
 import { CaseSelect }      from '@/components/game/screens/CaseSelect'
 import { Briefing }        from '@/components/game/screens/Briefing'
@@ -20,6 +21,7 @@ export default function ComplianceCourtPage() {
     continueGame,
     startNewGame,
     clearSave,
+    clearAllProgress,
     currentDialogue,
     isChoicePoint,
     verdictData,
@@ -28,12 +30,18 @@ export default function ComplianceCourtPage() {
 
   return (
     <main className="bg-background text-foreground min-h-screen font-sans">
+      {state.screen === 'game-select' && (
+        <GameSelect dispatch={dispatch} />
+      )}
+
       {state.screen === 'main-menu' && (
         <MainMenu
+          currentGame={state.currentGame}
           hasSavedGame={hasSavedGame}
           onContinue={continueGame}
           onNewGame={startNewGame}
           onOptions={() => dispatch({ type: 'GO_TO_OPTIONS' })}
+          onGoToGameSelect={() => dispatch({ type: 'GO_TO_GAME_SELECT' })}
         />
       )}
 
@@ -86,7 +94,7 @@ export default function ComplianceCourtPage() {
       )}
 
       {state.screen === 'options' && (
-        <Options state={state} dispatch={dispatch} onClearSave={clearSave} />
+        <Options state={state} dispatch={dispatch} onClearSave={clearAllProgress} />
       )}
     </main>
   )

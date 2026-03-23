@@ -18,6 +18,7 @@ export function Options({ state, dispatch, onClearSave }: OptionsProps) {
   function handleResetProgress() {
     dispatch({ type: 'SET_CASE_COMPLETE', payload: { caseId: 'case-1', complete: false } })
     dispatch({ type: 'SET_CASE_COMPLETE', payload: { caseId: 'case-2', complete: false } })
+    dispatch({ type: 'SET_OTF_CASE_COMPLETE', payload: { complete: false } })
     onClearSave()
   }
 
@@ -82,6 +83,29 @@ export function Options({ state, dispatch, onClearSave }: OptionsProps) {
           </div>
           {state.case2Complete ? (
             <CheckSquare size={18} className="text-court-gold shrink-0" />
+          ) : (
+            <Square size={18} className="text-muted-foreground shrink-0" />
+          )}
+        </button>
+
+        {/* OTF Case 1 */}
+        <button
+          onClick={() => dispatch({ type: 'SET_OTF_CASE_COMPLETE', payload: { complete: !state.otf1Complete } })}
+          className={cn(
+            'flex items-center justify-between px-4 py-4 rounded-sm border transition-all duration-150',
+            state.otf1Complete
+              ? 'border-green-600/60 bg-green-900/10'
+              : 'border-border bg-court-navy-light hover:border-court-grey'
+          )}
+        >
+          <div className="flex flex-col items-start gap-0.5">
+            <span className="text-sm font-mono tracking-wider text-court-white">OTF — Caso 1</span>
+            <span className="text-[10px] font-sans text-muted-foreground">
+              La Llamada
+            </span>
+          </div>
+          {state.otf1Complete ? (
+            <CheckSquare size={18} className="text-green-400 shrink-0" />
           ) : (
             <Square size={18} className="text-muted-foreground shrink-0" />
           )}

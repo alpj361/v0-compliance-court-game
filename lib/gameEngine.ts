@@ -4,14 +4,20 @@
 // All game state managed via useReducer. No external dependencies.
 
 import { useReducer, useCallback, useEffect, useState } from 'react'
-import type { Case, Scene, DialogueLine } from '@/lib/gameData'
+import type { Case, Scene, DialogueLine, GameId } from '@/lib/gameData'
 import { case1, case2 } from '@/lib/gameData'
+import { otfCase1 } from '@/lib/otfGameData'
 
 // ── Persistence ───────────────────────────────────────────────────────────────
 
-const CASES_MAP: Record<string, Case> = { 'case-1': case1, 'case-2': case2 }
-const SAVE_KEY  = 'compliance-court-v1'
-const SAVE_VER  = 2
+const CASES_MAP: Record<string, Case> = {
+  'case-1': case1,
+  'case-2': case2,
+  'otf-1': otfCase1,
+}
+const SAVE_KEY     = 'compliance-court-v1'
+const SAVE_VER     = 3
+const PROGRESS_KEY = 'compliance-court-progress'
 
 interface RawSave {
   ver: number
@@ -27,6 +33,8 @@ interface RawSave {
   playerName: string
   case1Complete: boolean
   case2Complete: boolean
+  otf1Complete: boolean
+  currentGame: GameId | null
   trialTimerActive: boolean
   trialTimeLeft: number
   pendingEvidencePresentation: boolean
@@ -53,6 +61,8 @@ function persistSave(state: GameState): void {
       playerName: state.playerName,
       case1Complete: state.case1Complete,
       case2Complete: state.case2Complete,
+      otf1Complete: state.otf1Complete,
+      currentGame: state.currentGame,
       trialTimerActive: state.trialTimerActive,
       trialTimeLeft: state.trialTimeLeft,
       pendingEvidencePresentation: state.pendingEvidencePresentation,
@@ -70,6 +80,32 @@ function clearPersistSave(): void {
   try { localStorage.removeItem(SAVE_KEY) } catch { /* noop */ }
 }
 
+function saveProgress(case1Complete: boolean, case2Complete: boolean, otf1Complete: boolean): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ case1Complete, case2Complete, otf1Complete }))
+  } catch { /* noop */ }
+}
+
+function loadProgress(): { case1Complete: boolean; case2Complete: boolean; otf1Complete: boolean } {
+  if (typeof window === 'undefined') return { case1Complete: false, case2Complete: false, otf1Complete: false }
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY)
+    if (!raw) return { case1Complete: false, case2Complete: false, otf1Complete: false }
+    const data = JSON.parse(raw)
+    return {
+      case1Complete: Boolean(data.case1Complete),
+      case2Complete: Boolean(data.case2Complete),
+      otf1Complete: Boolean(data.otf1Complete ?? false),
+    }
+  } catch { return { case1Complete: false, case2Complete: false, otf1Complete: false } }
+}
+
+function clearProgress(): void {
+  if (typeof window === 'undefined') return
+  try { localStorage.removeItem(PROGRESS_KEY) } catch { /* noop */ }
+}
+
 /** Returns null if no valid save exists. Adjusts trial timer for elapsed time. */
 function loadPersistSave(): Partial<GameState> | null {
   if (typeof window === 'undefined') return null
@@ -81,7 +117,7 @@ function loadPersistSave(): Partial<GameState> | null {
 
     // Screen guards — don't restore truly transient or completed states
     const screen = data.screen as GameState['screen']
-    if (screen === 'main-menu') return null
+    if (screen === 'main-menu' || screen === 'game-select') return null
 
     const activeCase = data.activeCaseId ? (CASES_MAP[data.activeCaseId] ?? null) : null
 
@@ -124,6 +160,8 @@ function loadPersistSave(): Partial<GameState> | null {
       playerName: data.playerName,
       case1Complete: data.case1Complete,
       case2Complete: data.case2Complete,
+      otf1Complete: Boolean(data.otf1Complete ?? false),
+      currentGame: (data.currentGame as GameId | null) ?? null,
       timedObjectionActive: false,
       timedObjectionExpired: false,
       trialTimerActive,
@@ -144,13 +182,14 @@ function checkHasSavedGame(): boolean {
     const raw = localStorage.getItem(SAVE_KEY)
     if (!raw) return false
     const data = JSON.parse(raw)
-    return data.ver === SAVE_VER && data.screen !== 'main-menu'
+    return data.ver === SAVE_VER && data.screen !== 'main-menu' && data.screen !== 'game-select'
   } catch { return false }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type GameScreen =
+  | 'game-select'
   | 'main-menu'
   | 'case-select'
   | 'briefing'
@@ -178,8 +217,10 @@ export interface GameState {
   wrongAnswerMessage: string | null
   isDialogueComplete: boolean
   playerName: string
+  currentGame: GameId | null
   case1Complete: boolean
   case2Complete: boolean
+  otf1Complete: boolean
   // Timed objection state
   timedObjectionActive: boolean
   timedObjectionExpired: boolean
@@ -197,8 +238,8 @@ export interface GameState {
 }
 
 const initialState: GameState = {
-  screen: 'main-menu',
-  gameMode: 'visual-novel',
+  screen: 'game-select',
+  gameMode: 'chat',
   activeCase: null,
   currentSceneId: null,
   currentDialogueIndex: 0,
@@ -209,8 +250,10 @@ const initialState: GameState = {
   wrongAnswerMessage: null,
   isDialogueComplete: false,
   playerName: 'Nicolas',
+  currentGame: null,
   case1Complete: false,
   case2Complete: false,
+  otf1Complete: false,
   timedObjectionActive: false,
   timedObjectionExpired: false,
   trialTimerActive: false,
@@ -252,6 +295,9 @@ export type GameAction =
   | { type: 'GO_TO_MAIN_MENU' }
   | { type: 'GO_TO_OPTIONS' }
   | { type: 'SET_CASE_COMPLETE'; payload: { caseId: 'case-1' | 'case-2'; complete: boolean } }
+  | { type: 'SET_OTF_CASE_COMPLETE'; payload: { complete: boolean } }
+  | { type: 'SELECT_GAME'; payload: GameId }
+  | { type: 'GO_TO_GAME_SELECT' }
   | { type: 'LOAD_SAVED_STATE'; payload: Partial<GameState> }
 
 function getCurrentScene(state: GameState): Scene | null {
@@ -279,6 +325,7 @@ function navigateToVerdict(state: GameState, fallbackSceneId?: string): GameStat
     trialTimerActive: false,
     case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
     case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+    otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
   }
 }
 
@@ -381,6 +428,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         currentSceneId: postponedSceneId,
         case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
         case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+        otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
       }
     }
 
@@ -393,9 +441,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const penalty = scene.evidencePenaltyCredibility ?? 8
       const delta = isCorrect ? bonus : -penalty
       const newCredibility = Math.max(0, Math.min(100, state.credibility + delta))
+      const correctTemplate = state.activeCase?.vocab?.correctEvidenceFeedback
+        ?? `+{bonus} Credibilidad — El tribunal toma nota. La evidencia presentada refuerza tu posición.`
+      const wrongTemplate = state.activeCase?.vocab?.wrongEvidenceFeedback
+        ?? `-{penalty} Credibilidad — Fuentes objeta: esa evidencia no es pertinente en este momento. El tribunal lo anota.`
       const feedback = isCorrect
-        ? `+${bonus} Credibilidad — El tribunal toma nota. La evidencia presentada refuerza tu posición.`
-        : `-${penalty} Credibilidad — Fuentes objeta: esa evidencia no es pertinente en este momento. El tribunal lo anota.`
+        ? correctTemplate.replace('{bonus}', String(bonus))
+        : wrongTemplate.replace('{penalty}', String(penalty))
       const nextSceneId = scene.nextSceneId ?? null
       const nextScene = nextSceneId ? state.activeCase?.scenes[nextSceneId] : null
 
@@ -511,6 +563,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           trialTimerActive: false,
           case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
           case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+          otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
         }
       }
 
@@ -743,6 +796,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         // Mark case complete as soon as verdict is reached (regardless of outcome)
         case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
         case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+        otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
       }
 
     case 'GO_TO_DEBRIEF':
@@ -751,6 +805,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         screen: 'debrief',
         case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
         case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+        otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
       }
 
     case 'RESTART_CASE':
@@ -789,8 +844,29 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         case2Complete: action.payload.caseId === 'case-2' ? action.payload.complete : state.case2Complete,
       }
 
+    case 'SET_OTF_CASE_COMPLETE':
+      return { ...state, otf1Complete: action.payload.complete }
+
+    case 'SELECT_GAME':
+      return { ...state, currentGame: action.payload, screen: 'main-menu' }
+
+    case 'GO_TO_GAME_SELECT':
+      return {
+        ...initialState,
+        case1Complete: state.case1Complete,
+        case2Complete: state.case2Complete,
+        otf1Complete: state.otf1Complete,
+      }
+
     case 'GO_TO_MAIN_MENU':
-      return { ...initialState }
+      return {
+        ...initialState,
+        currentGame: state.currentGame,
+        case1Complete: state.case1Complete,
+        case2Complete: state.case2Complete,
+        otf1Complete: state.otf1Complete,
+        screen: 'main-menu',
+      }
 
     case 'LOAD_SAVED_STATE':
       return { ...initialState, ...action.payload }
@@ -804,24 +880,48 @@ export function useGameEngine() {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const [hasSavedGame, setHasSavedGame] = useState(false)
 
-  // On mount (client only): detect existing save
+  // On mount (client only): detect existing save and restore persisted progress
   useEffect(() => {
-    setHasSavedGame(checkHasSavedGame())
+    const hasSave = checkHasSavedGame()
+    setHasSavedGame(hasSave)
+    if (!hasSave) {
+      // No active save — restore case completion flags from progress store
+      const progress = loadProgress()
+      if (progress.case1Complete) {
+        dispatch({ type: 'SET_CASE_COMPLETE', payload: { caseId: 'case-1', complete: true } })
+      }
+      if (progress.case2Complete) {
+        dispatch({ type: 'SET_CASE_COMPLETE', payload: { caseId: 'case-2', complete: true } })
+      }
+      if (progress.otf1Complete) {
+        dispatch({ type: 'SET_OTF_CASE_COMPLETE', payload: { complete: true } })
+      }
+    }
   }, [])
 
-  // Auto-save on every state change, except when on the main menu
+  // Auto-save on every state change, except when on the main menu or game select
   useEffect(() => {
-    if (state.screen === 'main-menu') return
+    if (state.screen === 'main-menu' || state.screen === 'game-select') return
     persistSave(state)
   }, [state])
 
-  // Clear save when going to main menu or debrief (session ended)
+  // Persist case completion flags independently so they survive debrief/menu resets
+  useEffect(() => {
+    saveProgress(state.case1Complete, state.case2Complete, state.otf1Complete)
+  }, [state.case1Complete, state.case2Complete, state.otf1Complete])
+
+  // Clear in-progress save when session ends (debrief), but keep progress intact
   useEffect(() => {
     if (state.screen === 'debrief') {
       clearPersistSave()
       setHasSavedGame(false)
     }
   }, [state.screen])
+
+  const clearAllProgress = useCallback(() => {
+    clearPersistSave()
+    clearProgress()
+  }, [])
 
   const continueGame = useCallback(() => {
     const saved = loadPersistSave()
@@ -866,6 +966,7 @@ export function useGameEngine() {
     continueGame,
     startNewGame,
     clearSave: clearPersistSave,
+    clearAllProgress,
     currentScene,
     currentDialogue,
     isChoicePoint,

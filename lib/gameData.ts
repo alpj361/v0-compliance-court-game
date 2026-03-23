@@ -2,6 +2,8 @@
 // All dialogue, evidence, scenes, and lessons live here.
 // The engine imports from this file only — no game logic here.
 
+export type GameId = 'compliance-court' | 'on-the-field'
+
 export type Portrait =
   | 'judge-neutral'
   | 'judge-angry'
@@ -26,6 +28,15 @@ export type Portrait =
   | 'nicolas-thinking'
   | 'nicolas-shocked'
   | 'compliance-officer-neutral'
+  // On the Field characters
+  | 'garcia-neutral'
+  | 'garcia-worried'
+  | 'reyes-arrogant'
+  | 'reyes-backing-down'
+  | 'vargas-agent-calm'
+  | 'vargas-agent-pressing'
+  | 'mendoza-friendly'
+  | 'mendoza-threatening'
 
 export type CharacterSide = 'left' | 'right' | 'center'
 
@@ -165,7 +176,7 @@ export interface Scene {
 }
 
 export interface VerdictData {
-  outcome: 'guilty' | 'guilty-reduced' | 'acquitted' | 'null-trial' | 'postponed' | 'lesson'
+  outcome: 'guilty' | 'guilty-reduced' | 'acquitted' | 'null-trial' | 'postponed' | 'lesson' | 'acuerdo' | 'tension-controlada' | 'sacrificio' | 'crisis' | 'sin-tiempo'
   title: string
   subtitle: string
   lessonTitle: string
@@ -173,8 +184,20 @@ export interface VerdictData {
   regulationRef: string
 }
 
+export interface CaseVocab {
+  credibilityLabel?: string    // e.g. "Cohesión del Vestuario"
+  evidenceLabel?: string       // e.g. "Informes"
+  recordLabel?: string         // e.g. "Informes del Vestuario"
+  investigationLabel?: string  // e.g. "Revisar Informes"
+  trialLabel?: string          // e.g. "Iniciar Reunión"
+  briefingEyesOnly?: string    // e.g. "Solo para el Asistente Técnico"
+  correctEvidenceFeedback?: string
+  wrongEvidenceFeedback?: string
+}
+
 export interface Case {
   id: string
+  gameId: GameId
   title: string
   subtitle: string
   jurisdiction: string
@@ -183,6 +206,7 @@ export interface Case {
   evidence: EvidenceCard[]
   firstSceneId: string
   scenes: Record<string, Scene>
+  vocab?: CaseVocab
   // Dynamic verdict routing based on final credibility (descending order)
   verdictRoutes?: { minCredibility: number; sceneId: string }[]
   // Scene to show if the 15-minute trial timer expires
@@ -196,6 +220,7 @@ export interface Case {
 // ─────────────────────────────────────────────────────────────────────────────
 export const case1: Case = {
   id: 'case-1',
+  gameId: 'compliance-court',
   title: 'EL EXPEDIENTE PÉREZ',
   subtitle: 'Sala de lo Penal — Ciudad de Guatemala',
   jurisdiction: 'Guatemala',
@@ -1341,6 +1366,7 @@ export const case1: Case = {
 // ─────────────────────────────────────────────────────────────────────────────
 export const case2: Case = {
   id: 'case-2',
+  gameId: 'compliance-court',
   title: 'THE TORONTO FILE',
   subtitle: 'OSFI Compliance Hearing — Toronto, Ontario',
   jurisdiction: 'Canada',
@@ -1938,6 +1964,7 @@ export const case2: Case = {
 }
 
 export const CASES: Case[] = [case1, case2]
+export const COMPLIANCE_CASES: Case[] = [case1, case2]
 
 // ── Final Debrief — addressed to Nicolas ─────────────────────────────────────
 export const finalDebrief = {

@@ -54,6 +54,42 @@ const OUTCOME_CONFIG = {
     icon: BookOpen,
     courtRules: 'El Tribunal Declara',
   },
+  // On the Field outcomes
+  acuerdo: {
+    label: 'ACUERDO',
+    headerColor: 'text-green-400',
+    bannerBg: 'bg-green-900/20 border-green-600/40',
+    icon: BookOpen,
+    courtRules: 'Resultado de la Negociación',
+  },
+  'tension-controlada': {
+    label: 'TENSIÓN CONTROLADA',
+    headerColor: 'text-amber-400',
+    bannerBg: 'bg-amber-900/20 border-amber-600/40',
+    icon: BookOpen,
+    courtRules: 'Resultado de la Negociación',
+  },
+  sacrificio: {
+    label: 'DECISIÓN DIFÍCIL',
+    headerColor: 'text-orange-400',
+    bannerBg: 'bg-orange-900/20 border-orange-600/40',
+    icon: Gavel,
+    courtRules: 'Resultado de la Negociación',
+  },
+  crisis: {
+    label: 'CRISIS',
+    headerColor: 'text-court-red',
+    bannerBg: 'bg-court-red/10 border-court-red/40',
+    icon: Gavel,
+    courtRules: 'Resultado de la Negociación',
+  },
+  'sin-tiempo': {
+    label: 'TIEMPO AGOTADO',
+    headerColor: 'text-court-grey',
+    bannerBg: 'bg-court-navy-mid border-border',
+    icon: RotateCcw,
+    courtRules: 'El Tiempo Expiró',
+  },
 }
 
 export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenProps) {
@@ -88,7 +124,7 @@ export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenPro
       {/* Lesson card */}
       <div className="max-w-2xl w-full rounded-sm border border-court-gold/50 bg-court-navy-mid p-6 md:p-8 flex flex-col gap-4">
         <div className="text-[10px] font-mono tracking-[0.3em] uppercase text-court-gold border-b border-border pb-2 mb-1">
-          Lección de Cumplimiento
+          {state.activeCase?.gameId === 'on-the-field' ? 'Lección de Liderazgo' : 'Lección de Cumplimiento'}
         </div>
         <h3 className="font-serif text-xl font-bold text-court-white leading-snug">
           {verdictData.lessonTitle}
@@ -108,7 +144,7 @@ export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenPro
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row items-center gap-4">
-        {/* Advance to Case 2 for all outcomes — case 1 always unlocks case 2 */}
+        {/* CC: Advance to Case 2 */}
         {state.activeCase?.id === 'case-1' && (
           <button
             onClick={() => dispatch({ type: 'GO_TO_DEBRIEF' })}
@@ -135,6 +171,20 @@ export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenPro
             Debrief Final
           </button>
         )}
+        {/* OTF: Go to case select */}
+        {state.activeCase?.gameId === 'on-the-field' && (
+          <button
+            onClick={() => dispatch({ type: 'GO_TO_CASE_SELECT' })}
+            className={cn(
+              'px-8 py-4 font-serif font-bold text-base tracking-widest uppercase',
+              'bg-green-600 text-white border-2 border-green-400',
+              'hover:bg-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)]',
+              'transition-all duration-200 active:scale-95'
+            )}
+          >
+            Volver a Casos
+          </button>
+        )}
         <button
           onClick={() => dispatch({ type: 'RESTART_CASE' })}
           className={cn(
@@ -153,7 +203,7 @@ export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenPro
         onClick={() => dispatch({ type: 'GO_TO_CASE_SELECT' })}
         className="text-xs text-muted-foreground hover:text-foreground transition-colors font-mono tracking-wider uppercase"
       >
-        &larr; Case Select
+        &larr; {state.activeCase?.gameId === 'on-the-field' ? 'Selección de Caso' : 'Case Select'}
       </button>
     </div>
   )

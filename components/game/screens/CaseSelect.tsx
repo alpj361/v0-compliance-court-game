@@ -1,10 +1,11 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { CASES } from '@/lib/gameData'
+import { COMPLIANCE_CASES } from '@/lib/gameData'
+import { OTF_CASES } from '@/lib/otfGameData'
 import type { GameAction } from '@/lib/gameEngine'
 import type { GameState } from '@/lib/gameEngine'
-import { Scale, Shield } from 'lucide-react'
+import { Scale, Shield, Footprints } from 'lucide-react'
 
 interface CaseSelectProps {
   state: GameState
@@ -12,70 +13,101 @@ interface CaseSelectProps {
 }
 
 export function CaseSelect({ state, dispatch }: CaseSelectProps) {
+  const currentGame = state.currentGame ?? 'compliance-court'
+  const isOTF = currentGame === 'on-the-field'
+  const gameCases = isOTF ? OTF_CASES : COMPLIANCE_CASES
+
+  function isComplete(caseId: string): boolean {
+    if (caseId === 'case-1') return state.case1Complete
+    if (caseId === 'case-2') return state.case2Complete
+    if (caseId === 'otf-1') return state.otf1Complete
+    return false
+  }
+
+  function isLocked(caseId: string, idx: number): boolean {
+    // CC: Case 2 locked until case 1 complete
+    if (!isOTF && idx === 1 && !state.case1Complete) return true
+    return false
+  }
+
+  function getCaseIcon(caseId: string) {
+    if (caseId === 'case-1') return Scale
+    if (caseId === 'case-2') return Shield
+    return Footprints
+  }
+
+  function getCtaLabel(c: typeof gameCases[0]) {
+    return c.vocab?.trialLabel ?? 'Enter Courtroom'
+  }
+
+  const accentColor = isOTF ? 'text-green-400' : 'text-court-gold'
+  const accentBorder = isOTF ? 'border-green-600/40' : 'border-court-gold/40'
+  const accentBorderHover = isOTF
+    ? 'border-green-600/50 bg-court-navy-mid hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.15)]'
+    : 'border-court-gold/50 bg-court-navy-mid hover:border-court-gold hover:shadow-[0_0_20px_rgba(212,160,23,0.15)]'
+  const accentIconBg = isOTF ? 'bg-green-700/20 text-green-400' : 'bg-court-gold/20 text-court-gold'
+
   return (
     <div className="relative w-full min-h-screen flex flex-col items-center justify-center px-4 py-12 gap-10">
       {/* Header */}
       <div className="flex flex-col items-center gap-2 text-center">
-        <div className="text-[10px] font-mono tracking-[0.35em] uppercase text-court-gold border border-court-gold/40 px-4 py-1">
-          Case Docket
+        <div className={cn('text-[10px] font-mono tracking-[0.35em] uppercase border px-4 py-1', accentColor, accentBorder)}>
+          {isOTF ? 'Selección de Caso' : 'Case Docket'}
         </div>
         <h2 className="font-serif text-3xl md:text-4xl font-bold text-court-white mt-2 text-balance">
-          Select Your Case
+          {isOTF ? 'Selecciona el Caso' : 'Select Your Case'}
         </h2>
-        <p className="text-court-grey text-sm max-w-md text-balance font-sans leading-relaxed mt-1">
-          Each case explores the same compliance failure from a different angle. Complete Case 1 first.
-        </p>
+        {!isOTF && (
+          <p className="text-court-grey text-sm max-w-md text-balance font-sans leading-relaxed mt-1">
+            Each case explores the same compliance failure from a different angle. Complete Case 1 first.
+          </p>
+        )}
       </div>
 
       {/* Cases */}
       <div className="flex flex-col md:flex-row gap-6 w-full max-w-3xl">
-        {CASES.map((c, idx) => {
-          const isLocked = idx === 1 && !state.case1Complete
-          const isComplete = c.id === 'case-1' ? state.case1Complete : state.case2Complete
-          const Icon = c.id === 'case-1' ? Scale : Shield
+        {gameCases.map((c, idx) => {
+          const locked = isLocked(c.id, idx)
+          const complete = isComplete(c.id)
+          const Icon = getCaseIcon(c.id)
 
           return (
             <button
               key={c.id}
-              disabled={isLocked}
+              disabled={locked}
               onClick={() => dispatch({ type: 'SELECT_CASE', payload: c })}
               className={cn(
                 'flex-1 text-left rounded-sm border p-6 transition-all duration-200',
                 'flex flex-col gap-4',
-                isLocked
+                locked
                   ? 'border-border bg-court-navy-mid opacity-50 cursor-not-allowed'
-                  : 'border-court-gold/50 bg-court-navy-mid hover:border-court-gold hover:shadow-[0_0_20px_rgba(212,160,23,0.15)] cursor-pointer',
-                isComplete && 'border-green-600/60'
+                  : cn(accentBorderHover, 'cursor-pointer'),
+                complete && 'border-green-600/60'
               )}
             >
               <div className="flex items-start justify-between">
-                <div
-                  className={cn(
-                    'p-2 rounded-sm',
-                    isLocked ? 'bg-secondary text-muted-foreground' : 'bg-court-gold/20 text-court-gold'
-                  )}
-                >
+                <div className={cn('p-2 rounded-sm', locked ? 'bg-secondary text-muted-foreground' : accentIconBg)}>
                   <Icon size={22} />
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-[9px] font-mono tracking-widest uppercase text-muted-foreground">
-                    Case {idx + 1} of 2
+                    Caso {idx + 1} de {gameCases.length}
                   </span>
-                  {isComplete && (
+                  {complete && (
                     <span className="text-[9px] font-mono tracking-widest uppercase px-1.5 py-0.5 bg-green-900/40 text-green-400 border border-green-600/40 rounded-[2px]">
-                      Complete
+                      Completado
                     </span>
                   )}
-                  {isLocked && (
+                  {locked && (
                     <span className="text-[9px] font-mono tracking-widest uppercase px-1.5 py-0.5 bg-secondary text-muted-foreground border border-border rounded-[2px]">
-                      Locked
+                      Bloqueado
                     </span>
                   )}
                 </div>
               </div>
 
               <div>
-                <div className="text-[10px] font-mono tracking-widest uppercase text-court-gold mb-1">
+                <div className={cn('text-[10px] font-mono tracking-widest uppercase mb-1', accentColor)}>
                   {c.roleLabel}
                 </div>
                 <h3 className="font-serif text-xl font-bold text-court-white leading-tight">
@@ -88,14 +120,14 @@ export function CaseSelect({ state, dispatch }: CaseSelectProps) {
                 {c.briefing}
               </p>
 
-              {!isLocked && (
-                <div className="text-xs font-serif text-court-gold mt-auto">
-                  Enter Courtroom &rarr;
+              {!locked && (
+                <div className={cn('text-xs font-serif mt-auto', accentColor)}>
+                  {getCtaLabel(c)} &rarr;
                 </div>
               )}
-              {isLocked && (
+              {locked && (
                 <div className="text-xs font-mono text-muted-foreground mt-auto">
-                  Complete Case 1 to unlock
+                  Completa el Caso 1 para desbloquear
                 </div>
               )}
             </button>

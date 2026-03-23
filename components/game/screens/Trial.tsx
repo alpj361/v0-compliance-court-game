@@ -143,6 +143,9 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
 
   if (!activeCase || !currentDialogue) return null
 
+  const recordLabel = activeCase.vocab?.recordLabel ?? 'Court Record'
+  const credibilityLabel = activeCase.vocab?.credibilityLabel
+
   const timedSeconds = currentDialogue.timedSeconds ?? 10
   const timerPct = timedObjectionActive ? (timerLeft / timedSeconds) * 100 : 100
 
@@ -206,7 +209,7 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
 
         {/* Credibility meter — top right */}
         <div className="absolute top-3 right-4 z-10">
-          <CredibilityMeter value={credibility} isHit={isWrongAnswerShaking} />
+          <CredibilityMeter value={credibility} isHit={isWrongAnswerShaking} label={credibilityLabel} />
         </div>
 
         {/* Court Record button — below timer */}
@@ -222,7 +225,7 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
           )}
         >
           <BookOpen size={11} />
-          Court Record
+          {recordLabel}
           {isEvidencePresentMode && <span className="ml-1 text-court-gold">↑</span>}
         </button>
 
@@ -230,7 +233,7 @@ export function Trial({ state, dispatch, currentDialogue, isChoicePoint, clearSh
         {courtRecordOpen && (
           <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20 w-full max-w-lg max-h-[50vh] overflow-y-auto bg-court-navy-mid border border-court-gold/40 rounded-sm shadow-xl p-4 flex flex-col gap-3">
             <div className="text-[10px] font-mono tracking-widest uppercase text-court-gold mb-1 pb-1 border-b border-border flex items-center justify-between">
-              <span>Court Record — Expediente</span>
+              <span>{recordLabel} — Expediente</span>
               {isEvidencePresentMode && (
                 <span className="text-court-gold/60 text-[9px]">Selecciona la evidencia a presentar</span>
               )}
