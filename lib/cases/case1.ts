@@ -1,6 +1,7 @@
 // ── CASE 1: EL EXPEDIENTE PÉREZ ──────────────────────────────────────────────
 // Sala de lo Penal — Guatemala City, Guatemala
 // Nicolas plays: The Prosecutor
+// Last updated: credibility-gated verdict scenes + s1-closing-gate
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Case } from '@/lib/types'
@@ -887,7 +888,7 @@ export const case1: Case = {
       nextSceneId: 's1-verdict-bad',
     },
 
-
+    's1-verdict-perfect': {
       id: 's1-verdict-perfect',
       isVerdictScene: true,
       dialogues: [],
