@@ -719,7 +719,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'GO_TO_VERDICT':
-      return { ...state, screen: 'verdict' }
+      return {
+        ...state,
+        screen: 'verdict',
+        // Mark case complete as soon as verdict is reached (regardless of outcome)
+        case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
+        case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+      }
 
     case 'GO_TO_DEBRIEF':
       return {

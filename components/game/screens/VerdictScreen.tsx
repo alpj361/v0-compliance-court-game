@@ -108,8 +108,8 @@ export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenPro
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row items-center gap-4">
-        {/* Only show "advance" button for winning outcomes */}
-        {state.activeCase?.id === 'case-1' && (verdictData.outcome === 'guilty' || verdictData.outcome === 'guilty-reduced') && (
+        {/* Advance to Case 2 for all outcomes — case 1 always unlocks case 2 */}
+        {state.activeCase?.id === 'case-1' && (
           <button
             onClick={() => dispatch({ type: 'GO_TO_DEBRIEF' })}
             className={cn(
