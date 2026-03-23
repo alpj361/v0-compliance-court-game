@@ -25,14 +25,14 @@ export const otfCase1: Case = {
     'antes de que el DT tenga que tomar una decisión unilateral.',
 
   vocab: {
-    credibilityLabel: 'Cohesión del Vestuario',
+    credibilityLabel: 'Poder de Negociación',
     evidenceLabel: 'Informes',
     recordLabel: 'Informes del Vestuario',
     investigationLabel: 'Revisar Informes',
     trialLabel: 'Iniciar Reunión',
     briefingEyesOnly: 'Solo para el Asistente Técnico',
-    correctEvidenceFeedback: '+{bonus} Cohesión — La información presenta una perspectiva clave que cambia la dinámica.',
-    wrongEvidenceFeedback: '-{penalty} Cohesión — Esa información no es relevante en este momento. Reyes y Vargas lo notan.',
+    correctEvidenceFeedback: '+{bonus} Negociación — La información presenta una perspectiva clave que cambia la dinámica.',
+    wrongEvidenceFeedback: '-{penalty} Negociación — Esa información no es relevante en este momento. Reyes y Vargas lo notan.',
   },
 
   firstSceneId: 'otf1-reunion-inicial',
@@ -264,7 +264,7 @@ export const otfCase1: Case = {
       ],
     },
 
-    // ── Escena 2: El capitán ──────────────────────────────────────────────
+    // ── Escena 2: El capitán ──────────────────────────────���───────────────
     'otf1-capitan': {
       id: 'otf1-capitan',
       dialogues: [
@@ -459,7 +459,7 @@ export const otfCase1: Case = {
           speaker: 'Diego Fuentes',
           portrait: 'garcia-neutral',
           side: 'left',
-          text: 'Tengo información del equipo que el cuerpo técnico recopiló el mes pasado. Podría cambiar la conversación si la presentamos correctamente.',
+          text: 'Tengo informaci��n del equipo que el cuerpo técnico recopiló el mes pasado. Podría cambiar la conversación si la presentamos correctamente.',
         },
         {
           id: 'otf1-d4-narrador',
