@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { GameAction, GameMode } from '@/lib/gameEngine'
-import { Layers, MessageSquare } from 'lucide-react'
+import { Layers, MessageSquare, Lock } from 'lucide-react'
 
 interface MainMenuProps {
   dispatch: React.Dispatch<GameAction>
@@ -71,19 +71,22 @@ export function MainMenu({ dispatch }: MainMenuProps) {
               <span className="text-xs font-mono tracking-wider uppercase">Chat Thread</span>
               <span className="text-[10px] font-sans text-muted-foreground leading-snug text-center">Conversation-style. No portraits.</span>
             </button>
-            <button
-              onClick={() => setSelectedMode('visual-novel')}
-              className={cn(
-                'flex-1 flex flex-col items-center gap-2 px-4 py-4 border rounded-sm transition-all duration-150 text-left',
-                selectedMode === 'visual-novel'
-                  ? 'border-court-gold bg-court-gold/10 text-court-white'
-                  : 'border-border bg-court-navy-light text-muted-foreground hover:border-court-gold/40'
-              )}
-            >
-              <Layers size={18} className={selectedMode === 'visual-novel' ? 'text-court-gold' : 'text-muted-foreground'} />
-              <span className="text-xs font-mono tracking-wider uppercase">Visual Novel</span>
-              <span className="text-[10px] font-sans text-muted-foreground leading-snug text-center">Courtroom scene with dialogue box.</span>
-            </button>
+            <div className="relative flex-1">
+              <div
+                className={cn(
+                  'flex flex-col items-center gap-2 px-4 py-4 border rounded-sm text-left',
+                  'border-border bg-court-navy-light text-muted-foreground/40 cursor-not-allowed opacity-60'
+                )}
+              >
+                <Layers size={18} className="text-muted-foreground/40" />
+                <span className="text-xs font-mono tracking-wider uppercase">Visual Novel</span>
+                <span className="text-[10px] font-sans text-muted-foreground/50 leading-snug text-center">Courtroom scene with dialogue box.</span>
+              </div>
+              <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 bg-court-navy border border-court-gold/60 rounded-sm">
+                <Lock size={8} className="text-court-gold/80" />
+                <span className="text-[8px] font-mono tracking-widest uppercase text-court-gold/80">Próximamente</span>
+              </div>
+            </div>
           </div>
         </div>
 

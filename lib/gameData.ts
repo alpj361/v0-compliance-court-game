@@ -362,6 +362,7 @@ export const case1: Case = {
               isCorrect: false,
               wrongPenalty: 15,
               feedback: 'Magistrado Morales interrumpe: "Fiscal, el resultado posterior no es el estándar legal. La obligación existía antes de conocer el resultado. Reformule."',
+              nextSceneId: 's1-wrong-c1b',
             },
             {
               id: 'c1-c',
@@ -369,6 +370,7 @@ export const case1: Case = {
               isCorrect: false,
               wrongPenalty: 10,
               feedback: 'Fuentes objeta: "Irrelevante, Su Señoría." El juez lo admite. Pierdes terreno.',
+              nextSceneId: 's1-wrong-c1c',
             },
           ],
         },
@@ -413,6 +415,7 @@ export const case1: Case = {
               isCorrect: false,
               wrongPenalty: 10,
               feedback: 'Magistrado Morales: "Fiscal, afirme con evidencia, no con declaraciones."',
+              nextSceneId: 's1-wrong-c2b',
             },
             {
               id: 'c2-c',
@@ -420,6 +423,7 @@ export const case1: Case = {
               isCorrect: false,
               wrongPenalty: 15,
               feedback: 'Fuentes objeta: "Su Señoría, ese documento es prematuro. La obligación aún no ha sido establecida." Admitido. Credibilidad dañada.',
+              nextSceneId: 's1-wrong-c2c',
             },
           ],
         },
@@ -471,13 +475,15 @@ export const case1: Case = {
               isCorrect: false,
               wrongPenalty: 15,
               feedback: 'Fuentes: "Su Señoría, el fiscal está ampliando la causa sin fundamento." Admitido. Pierde enfoque.',
+              nextSceneId: 's1-wrong-c3b',
             },
             {
               id: 'c3-c',
               label: '"Acepto que la discreción senior puede ser válida en situaciones urgentes."',
               isCorrect: false,
               wrongPenalty: 25,
-              feedback: 'Catastrophic. Concedes el argumento central. La política escrita no puede ser anulada por costumbre informal.',
+              feedback: 'Catastrófico. Concediste el argumento central. Fuentes salta sobre la concesión.',
+              nextSceneId: 's1-wrong-c3c',
             },
           ],
         },
@@ -524,6 +530,7 @@ export const case1: Case = {
               isCorrect: false,
               wrongPenalty: 15,
               feedback: 'Magistrado Morales: "Admitida la objeción de la defensa. Eso no es un argumento legal, Fiscal."',
+              nextSceneId: 's1-wrong-c4b',
             },
             {
               id: 'c4-c',
@@ -531,6 +538,7 @@ export const case1: Case = {
               isCorrect: false,
               wrongPenalty: 20,
               feedback: 'Silencio fatal. La objeción queda sin respuesta. Credibilidad dañada.',
+              nextSceneId: 's1-wrong-c4c',
             },
           ],
         },
@@ -581,6 +589,7 @@ export const case1: Case = {
               isCorrect: false,
               wrongPenalty: 15,
               feedback: 'Fuentes contraataca: "El dinero se habría movido igualmente." El juez da la razón a la defensa. Credibilidad dañada.',
+              nextSceneId: 's1-wrong-c5b',
             },
             {
               id: 'c5-c',
@@ -588,6 +597,7 @@ export const case1: Case = {
               isCorrect: false,
               wrongPenalty: 15,
               feedback: 'Magistrado Morales: "Fiscal, la culpa del cliente no es la cuestión ante este tribunal."',
+              nextSceneId: 's1-wrong-c5c',
             },
           ],
         },
@@ -650,6 +660,309 @@ export const case1: Case = {
           'Rodrigo no era un agente descuidado. Era un agente seguro de sí mismo. Ocho años de experiencia, un historial impecable — y creyó que ese historial le daba el derecho de decidir cuándo aplicaba la ley.\n\nNo le daba ese derecho.\n\nEl paso del tamizaje existe precisamente porque el juicio humano, por más experimentado que sea, tiene límites. Por eso se escribió la ley. La confianza sin verificación no es profesionalismo. Es exposición.\n\nAntes del Caso 2: pregúntate — ¿cuándo fue la última vez que conocías tan bien una situación que no viste la necesidad de verificar?',
         regulationRef: 'Decreto 67-2001, Art. 18 / Protocolo BI Sección 4.3',
       },
+    },
+
+    // ── Wrong-choice branch scenes ─────────────────────────────────────────
+
+    's1-wrong-c1b': {
+      id: 's1-wrong-c1b',
+      nextSceneId: 's1-obligation',
+      dialogues: [
+        {
+          id: 'd1-w01a',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'Fiscal — la culpa posterior del cliente es irrelevante a la cuestión ante este tribunal. El estándar legal no es "¿era culpable el cliente?" sino "¿existía la obligación de tamizar en el momento de la transacción?" Reformule.',
+        },
+        {
+          id: 'd1-w01b',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Precisamente, Su Señoría. El fiscal confunde el resultado con la obligación. Si el estándar fuera el resultado, ningún agente experimentado jamás necesitaría tamizar a un cliente conocido.',
+        },
+        {
+          id: 'd1-w01c',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-confident',
+          side: 'right',
+          text: 'Exactamente. He procesado cientos de transacciones para Ernesto. Siempre fue legítimo. Mi juicio fue correcto.',
+        },
+        {
+          id: 'd1-w01d',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'El juez tiene razón. Cometí un error. La defensa lo capitalizó. Debo redirigir el argumento al momento de la obligación — no al resultado.',
+        },
+      ],
+    },
+
+    's1-wrong-c1c': {
+      id: 's1-wrong-c1c',
+      nextSceneId: 's1-obligation',
+      dialogues: [
+        {
+          id: 'd1-w02a',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Objeción, Su Señoría. La pregunta del fiscal es irrelevante. El cumplimiento histórico de mi cliente no está en disputa. Lo que está en disputa es una sola transacción y la legalidad de la decisión que tomó ese día.',
+        },
+        {
+          id: 'd1-w02b',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'Admitida. Fiscal, su pregunta no avanza el argumento legal. Enfóquese en la obligación existente el 14 de febrero.',
+        },
+        {
+          id: 'd1-w02c',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Me fui por las ramas. El historial anterior no importa aquí — lo que importa es la obligación en ese momento específico.',
+        },
+      ],
+    },
+
+    's1-wrong-c2b': {
+      id: 's1-wrong-c2b',
+      nextSceneId: 's1-protocol-hit',
+      dialogues: [
+        {
+          id: 'd1-w03a',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'Fiscal, afirmar que "la ley es obligación" es una tautología, no un argumento. El tribunal espera que fundamente esa obligación con evidencia concreta. ¿Qué documento le respalda?',
+        },
+        {
+          id: 'd1-w03b',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Su Señoría, si el fiscal carece de evidencia documental que sustente la obligación específica, le solicito que se archive la causa por falta de fundamento probatorio.',
+        },
+        {
+          id: 'd1-w03c',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'Fiscal — una última oportunidad. Presente la evidencia que establece la obligación, o admitamos la moción de la defensa.',
+        },
+        {
+          id: 'd1-w03d',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Tengo el Protocolo Interno firmado por Pérez. Necesito presentarlo ahora antes de que sea demasiado tarde.',
+        },
+      ],
+    },
+
+    's1-wrong-c2c': {
+      id: 's1-wrong-c2c',
+      nextSceneId: 's1-protocol-hit',
+      dialogues: [
+        {
+          id: 'd1-w04a',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Objeción, Su Señoría. El Informe IVE es prematuro. El fiscal aún no ha establecido que existía una obligación de tamizar. Presentar el resultado del señalamiento antes de probar la obligación invierte la carga probatoria.',
+        },
+        {
+          id: 'd1-w04b',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'Admitida. Fiscal, el Informe IVE queda excluido de momento. Deberá establecer primero la obligación legal antes de presentar consecuencias. Proceda en orden.',
+        },
+        {
+          id: 'd1-w04c',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Me adelanté. Perdí una pieza clave de evidencia por mal orden. Debo retroceder y establecer la obligación correctamente — el Protocolo firmado por Pérez es el punto de partida.',
+        },
+      ],
+    },
+
+    's1-wrong-c3b': {
+      id: 's1-wrong-c3b',
+      nextSceneId: 's1-elena',
+      dialogues: [
+        {
+          id: 'd1-w05a',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Objeción, Su Señoría. El fiscal está convirtiendo este juicio en una cacería institucional sin fundamento. Mi cliente no está aquí para responder por sus colegas.',
+        },
+        {
+          id: 'd1-w05b',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'Admitida. Fiscal, este tribunal conoce el caso de Rodrigo Pérez, no la cultura interna del banco. Manténgase en los hechos del expediente. Siguiente argumento.',
+        },
+        {
+          id: 'd1-w05c',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Me salí del caso. La "cultura institucional" como defensa debe ser atacada con la ley, no expandiendo la causa. El Artículo 18 no tiene excepciones. Ese es el argumento.',
+        },
+      ],
+    },
+
+    's1-wrong-c3c': {
+      id: 's1-wrong-c3c',
+      nextSceneId: 's1-elena',
+      dialogues: [
+        {
+          id: 'd1-w06a',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Su Señoría — el propio fiscal acaba de conceder que la discreción senior puede ser válida en situaciones urgentes. Solicito que esa concesión quede registrada en el expediente.',
+        },
+        {
+          id: 'd1-w06b',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'Registrada. Fiscal — acaba de ceder el argumento central de la fiscalía. Si acepta que existe discreción, debe demostrar por qué en este caso específico esa discreción fue mal ejercida. El umbral acaba de subir considerablemente.',
+        },
+        {
+          id: 'd1-w06c',
+          speaker: 'Rodrigo Pérez',
+          portrait: 'rodrigo-confident',
+          side: 'right',
+          text: 'Exactamente. Usé mi juicio profesional. Eso es lo que me paga el banco.',
+        },
+        {
+          id: 'd1-w06d',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Error grave. Concedí territorio que no debí ceder. Necesito recuperar el terreno apelando al texto literal del Decreto — no existe ninguna excepción en el Artículo 18. Ninguna.',
+        },
+      ],
+    },
+
+    's1-wrong-c4b': {
+      id: 's1-wrong-c4b',
+      nextSceneId: 's1-closing',
+      dialogues: [
+        {
+          id: 'd1-w07a',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'Admitida la objeción de la defensa. Fiscal, argumentar que la supervisora "debió ser más específica" no establece responsabilidad supervisorial bajo ningún marco legal vigente. Es una opinión, no un argumento jurídico.',
+        },
+        {
+          id: 'd1-w07b',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Gracias, Su Señoría. Mi clienta cumplió con notificar. El correo fue enviado, fue leído, fue confirmado. Lo que ocurrió después fue decisión del agente, no falla supervisorial.',
+        },
+        {
+          id: 'd1-w07c',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'La objeción fue admitida. Fuentes tiene razón en que el correo fue enviado. El argumento de responsabilidad supervisorial quedó débil — pero el caso contra Pérez aún es sólido.',
+        },
+      ],
+    },
+
+    's1-wrong-c4c': {
+      id: 's1-wrong-c4c',
+      nextSceneId: 's1-closing',
+      dialogues: [
+        {
+          id: 'd1-w08a',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Su Señoría — el fiscal no tiene respuesta. La objeción queda sin contestar.',
+        },
+        {
+          id: 'd1-w08b',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'El silencio del fiscal es anotado. La objeción de la defensa queda en pie. Puede continuar, Licenciado Fuentes.',
+        },
+        {
+          id: 'd1-w08c',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Silencio fatal. Fuentes anotó el punto. El juez lo registró. Credibilidad en el piso. Debo recuperar el control en el argumento de cierre — es la última oportunidad.',
+        },
+      ],
+    },
+
+    's1-wrong-c5b': {
+      id: 's1-wrong-c5b',
+      nextSceneId: 's1-verdict-scene',
+      dialogues: [
+        {
+          id: 'd1-w09a',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-smug',
+          side: 'right',
+          text: 'Su Señoría — el dinero se habría movido igualmente. La red de lavado ya operaba. La transacción de mi cliente no creó el esquema, no lo habilitó, no lo financió de forma determinante. El daño que alega el fiscal es especulativo.',
+        },
+        {
+          id: 'd1-w09b',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'El tribunal le da la razón a la defensa en este punto. Fiscal, el argumento causal no es sostenible si el proceso de lavado ya estaba activo independientemente de la transacción en cuestión.',
+        },
+        {
+          id: 'd1-w09c',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Me embarqué en el argumento equivocado. El punto no es el daño causado — es que el paso no se completó. La obligación es procedimental, no depende del resultado. Ese era el argumento correcto.',
+        },
+      ],
+    },
+
+    's1-wrong-c5c': {
+      id: 's1-wrong-c5c',
+      nextSceneId: 's1-verdict-scene',
+      dialogues: [
+        {
+          id: 'd1-w10a',
+          speaker: 'Magistrado Morales',
+          portrait: 'morales-judge-neutral',
+          side: 'center',
+          text: 'Fiscal — la culpabilidad del cliente no está ante este tribunal. Lo que está ante este tribunal es si el señor Pérez cumplió con su obligación procedimental. Esas son dos preguntas distintas.',
+        },
+        {
+          id: 'd1-w10b',
+          speaker: 'Lic. Marco Fuentes (Defensa)',
+          portrait: 'fuentes-rattled',
+          side: 'right',
+          text: 'Y precisamente por eso, Su Señoría — incluso si Villanueva fuera culpable, eso no retroactivamente valida que el paso era necesario desde la perspectiva del agente en el momento.',
+        },
+        {
+          id: 'd1-w10c',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'Fui por el camino fácil. La culpa del cliente no es el argumento. El argumento es que la obligación existe en el momento de la transacción — independientemente de quién sea el cliente.',
+        },
+      ],
     },
   },
 }
@@ -867,6 +1180,7 @@ export const case2: Case = {
               isCorrect: false,
               wrongPenalty: 15,
               feedback: 'Chen immediately presents Coaching Logs 1, 2, and 3 — three written acknowledgments. "Counselor, your client signed each of these documents. He was not undertrained. He was non-compliant."',
+              nextSceneId: 's2-wrong-c1a',
             },
             {
               id: 'c2-1-b',
@@ -874,6 +1188,7 @@ export const case2: Case = {
               isCorrect: false,
               wrongPenalty: 15,
               feedback: 'Chen presents the Call Monitoring Report: "The call types differ. The skipped step is identical in all four. This is behavioral, not knowledge-based. The QA report uses that exact language."',
+              nextSceneId: 's2-wrong-c1b',
             },
             {
               id: 'c2-1-c',
@@ -917,6 +1232,7 @@ export const case2: Case = {
               isCorrect: false,
               wrongPenalty: 15,
               feedback: 'David shows the signed coaching logs. "He confirmed in writing that he understood. Three times." Okafor notes the response.',
+              nextSceneId: 's2-wrong-c2a',
             },
             {
               id: 'c2-2-b',
@@ -924,6 +1240,7 @@ export const case2: Case = {
               isCorrect: false,
               wrongPenalty: 15,
               feedback: 'Chen objects immediately: "The step is required regardless of agent performance level. FINTRAC Section 9.3 does not provide a performance-based exemption." Sustained.',
+              nextSceneId: 's2-wrong-c2b',
             },
             {
               id: 'c2-2-c',
@@ -973,8 +1290,9 @@ export const case2: Case = {
               id: 'c2-3-a',
               label: '"Hearing Officer — my client was right on every flagged call. The verification would have confirmed what he already knew. No client was harmed. No incorrect action was taken."',
               isCorrect: false,
-              wrongPenalty: 0,
-              feedback: 'outcome-argument',
+              wrongPenalty: 10,
+              feedback: 'Chen: "OBJECTION. The regulatory obligation is procedural — not outcome-dependent. FINTRAC Section 9.3 requires the step before the action, not because the agent might be wrong, but because the institution cannot rely on agent confidence as a substitute for documented verification."',
+              nextSceneId: 's2-wrong-c2-3a',
             },
             {
               id: 'c2-3-b',
@@ -1070,6 +1388,169 @@ export const case2: Case = {
         },
       ],
       nextSceneId: 's2-verdict',
+    },
+
+    // ── Wrong-choice branch scenes ─────────────────────────────────────────
+
+    's2-wrong-c1a': {
+      id: 's2-wrong-c1a',
+      nextSceneId: 's2-david',
+      dialogues: [
+        {
+          id: 'd2-w01a',
+          speaker: 'Sarah Chen',
+          portrait: 'chen-calm',
+          side: 'right',
+          text: 'Hearing Officer, with respect — may I present Exhibits C-1 through C-3? Three signed coaching logs, each documenting a session where the specific requirement was explained to Agent Alex M. and where the agent confirmed in writing that he understood.',
+        },
+        {
+          id: 'd2-w01b',
+          speaker: 'Hearing Officer Okafor',
+          portrait: 'okafor-neutral',
+          side: 'center',
+          text: 'Admitted. Counselor — your client signed three separate acknowledgments of this exact requirement. "I understand and will comply." Three times. The training defense is not available to you.',
+        },
+        {
+          id: 'd2-w01c',
+          speaker: 'Alex M.',
+          portrait: 'alex-defeated',
+          side: 'left',
+          text: 'I did sign them. I did understand. I just... I knew the answer every time. I didn\'t think the step mattered when I already knew.',
+        },
+        {
+          id: 'd2-w01d',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'The coaching logs destroyed that argument completely. Alex knew. He signed. The training defense is gone. I need to review the record more carefully before my next move.',
+        },
+      ],
+    },
+
+    's2-wrong-c1b': {
+      id: 's2-wrong-c1b',
+      nextSceneId: 's2-david',
+      dialogues: [
+        {
+          id: 'd2-w02a',
+          speaker: 'Sarah Chen',
+          portrait: 'chen-calm',
+          side: 'right',
+          text: 'Hearing Officer — may I refer to the QA Call Monitoring Report? It addresses this directly. Quote: "The skipped step is identical in all four calls. Four different call types. This is behavioral, not knowledge-based." That is the institution\'s own Quality Assurance language.',
+        },
+        {
+          id: 'd2-w02b',
+          speaker: 'Hearing Officer Okafor',
+          portrait: 'okafor-neutral',
+          side: 'center',
+          text: 'The QA report is noted. Counsel, the call types differ. The failure is identical. That pattern is inconsistent with a systemic training issue — it is consistent with a behavioral one.',
+        },
+        {
+          id: 'd2-w02c',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'The QA report says "behavioral, not knowledge-based" in plain language. That argument collapsed on itself. I need to go to the source — David R. and the coaching record — and find something that actually holds.',
+        },
+      ],
+    },
+
+    's2-wrong-c2a': {
+      id: 's2-wrong-c2a',
+      nextSceneId: 's2-behavioral-reveal',
+      dialogues: [
+        {
+          id: 'd2-w03a',
+          speaker: 'David R.',
+          portrait: 'david-precise',
+          side: 'right',
+          text: 'I conducted each session in English — the working language of our team. Each time, I walked through the system screen step by step. I showed him exactly where the verification appears in the workflow. He confirmed verbally and in writing that the process was clear.',
+        },
+        {
+          id: 'd2-w03b',
+          speaker: 'Hearing Officer Okafor',
+          portrait: 'okafor-neutral',
+          side: 'center',
+          text: 'Counselor — the coaching format appears thorough. Three sessions, three written acknowledgments. Is there a specific deficiency in the format you can point to, or is this a general question?',
+        },
+        {
+          id: 'd2-w03c',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'There is no deficiency I can point to. The format was adequate. The acknowledgments are signed. This line of questioning went nowhere — and Okafor noticed. I need to dig into what David actually observed, not how he delivered the message.',
+        },
+      ],
+    },
+
+    's2-wrong-c2b': {
+      id: 's2-wrong-c2b',
+      nextSceneId: 's2-behavioral-reveal',
+      dialogues: [
+        {
+          id: 'd2-w04a',
+          speaker: 'Sarah Chen',
+          portrait: 'chen-calm',
+          side: 'right',
+          text: 'Objection. FINTRAC Section 9.3 does not provide a performance-based exemption. The verification step applies to every agent, on every flagged transaction, regardless of NPS score or conversion rate. Performance metrics and compliance obligations are parallel, non-competing tracks.',
+        },
+        {
+          id: 'd2-w04b',
+          speaker: 'Hearing Officer Okafor',
+          portrait: 'okafor-neutral',
+          side: 'center',
+          text: 'Sustained. Mr. R. — to the question: did Agent Alex M.\'s performance metrics factor into your assessment of whether the verification step was necessary for his call types?',
+        },
+        {
+          id: 'd2-w04c',
+          speaker: 'David R.',
+          portrait: 'david-precise',
+          side: 'right',
+          text: 'No. The step is required regardless of performance. Those are separate systems. Alex knew that. He had one of the highest NPS scores on the team — and he still had to complete the verification. One does not replace the other.',
+        },
+        {
+          id: 'd2-w04d',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'That line collapsed immediately. Chen was right — performance and compliance are parallel tracks. Okafor knows it. I need to shift to what David actually observed behaviorally, not what Alex achieved commercially.',
+        },
+      ],
+    },
+
+    's2-wrong-c2-3a': {
+      id: 's2-wrong-c2-3a',
+      nextSceneId: 's2-closing-build',
+      dialogues: [
+        {
+          id: 'd2-w05a',
+          speaker: 'Sarah Chen',
+          portrait: 'chen-calm',
+          side: 'right',
+          text: 'Objection. FINTRAC Section 9.3 is explicit: "Failure to complete the required verification step before taking action constitutes a compliance program deficiency, regardless of whether the action taken was ultimately correct." Counselor is arguing outcome. The regulation governs process.',
+        },
+        {
+          id: 'd2-w05b',
+          speaker: 'Hearing Officer Okafor',
+          portrait: 'okafor-neutral',
+          side: 'center',
+          text: 'Sustained. Counsel, I want to be direct with you: the fact that your client was right does not create a legal exemption from the requirement to verify. FINTRAC does not evaluate correctness of outcome. It evaluates adherence to process. That argument is not available to you in this hearing.',
+        },
+        {
+          id: 'd2-w05c',
+          speaker: 'Alex M.',
+          portrait: 'alex-defeated',
+          side: 'left',
+          text: 'He\'s right. I knew it when David told me after the third session. Being right didn\'t matter. I still had to run the step.',
+        },
+        {
+          id: 'd2-w05d',
+          speaker: 'Nicolas',
+          portrait: 'nicolas-thinking',
+          side: 'left',
+          text: 'There is no outcome-based argument here. Okafor put it on the record. Alex himself concedes it. The only path left is the one that admits the truth — and asks for the chance to build a different record.',
+        },
+      ],
     },
 
     's2-verdict': {

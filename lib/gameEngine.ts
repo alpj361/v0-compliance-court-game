@@ -294,23 +294,62 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           wrongAnswerMessage: null,
         }
       } else {
-        // Special case: outcome argument in Case 2 — Chen fires back, no scene change
-        const isOutcomeArg = action.payload.feedback === 'outcome-argument'
-        if (isOutcomeArg) {
+        const penalty = action.payload.penalty ?? 15
+        const newCredibility = Math.max(0, state.credibility - penalty)
+        const wrongMessage = action.payload.feedback ?? 'Wrong approach.'
+
+        // Navigate to the wrong-choice branch scene (nextSceneId now always set on wrong choices)
+        const nextSceneId = action.payload.nextSceneId
+        if (!nextSceneId || !state.activeCase?.scenes[nextSceneId]) {
+          // Fallback: stay on current scene with shake (should not happen with complete data)
           return {
             ...state,
-            credibility: Math.max(0, state.credibility - 10),
+            credibility: newCredibility,
             isWrongAnswerShaking: true,
-            wrongAnswerMessage:
-              'Chen: "OBJECTION. The regulatory obligation is procedural — not outcome-dependent. FINTRAC Section 9.3 requires the step before the action, not because the agent might be wrong, but because the institution cannot rely on agent confidence as a substitute for documented verification."',
+            wrongAnswerMessage: wrongMessage,
           }
         }
-        const penalty = action.payload.penalty ?? 15
+
+        const nextScene = state.activeCase.scenes[nextSceneId]
+        if (nextScene.isVerdictScene) {
+          return {
+            ...state,
+            credibility: newCredibility,
+            currentSceneId: nextSceneId,
+            currentDialogueIndex: 0,
+            isDialogueComplete: false,
+            timedObjectionActive: false,
+            timedObjectionExpired: false,
+            isWrongAnswerShaking: true,
+            wrongAnswerMessage: wrongMessage,
+            screen: 'verdict',
+          }
+        }
+        if (nextScene.isArgumentScene) {
+          return {
+            ...state,
+            credibility: newCredibility,
+            currentSceneId: nextSceneId,
+            screen: 'argument-builder',
+            timedObjectionActive: false,
+            timedObjectionExpired: false,
+            selectedArgumentIds: new Set(),
+            argumentSubmitted: false,
+            argumentFeedback: null,
+            isWrongAnswerShaking: true,
+            wrongAnswerMessage: wrongMessage,
+          }
+        }
         return {
           ...state,
-          credibility: Math.max(0, state.credibility - penalty),
+          credibility: newCredibility,
+          currentSceneId: nextSceneId,
+          currentDialogueIndex: 0,
+          isDialogueComplete: false,
+          timedObjectionActive: false,
+          timedObjectionExpired: false,
           isWrongAnswerShaking: true,
-          wrongAnswerMessage: action.payload.feedback ?? 'Wrong approach. Try again.',
+          wrongAnswerMessage: wrongMessage,
         }
       }
     }
