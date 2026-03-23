@@ -190,7 +190,16 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const dialogue = scene.dialogues[state.currentDialogueIndex]
 
       if (dialogue?.overlay && state.pendingOverlay !== dialogue.overlay) {
-        return { ...state, pendingOverlay: dialogue.overlay, isDialogueComplete: false }
+        // Show overlay AND advance past this dialogue (it's already been pushed to component history
+        // by handleAdvance before dispatching NEXT_DIALOGUE, so the index can safely move forward).
+        // Without advancing here, a subsequent NEXT_DIALOGUE after CLEAR_OVERLAY would re-evaluate
+        // the same dialogue at the same index and retrigger the overlay indefinitely.
+        return {
+          ...state,
+          pendingOverlay: dialogue.overlay,
+          isDialogueComplete: false,
+          currentDialogueIndex: state.currentDialogueIndex + 1,
+        }
       }
 
       if (state.pendingOverlay) {
