@@ -570,6 +570,20 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       if (scene.nextSceneId && state.activeCase?.scenes[scene.nextSceneId]) {
         const nextScene = state.activeCase.scenes[scene.nextSceneId]
         if (nextScene.isVerdictScene) {
+          // If the current scene flagged bypassVerdictRouting, go directly to nextSceneId
+          // without re-evaluating credibility-based verdictRoutes. This preserves verdicts
+          // that were already "delivered" in the scene's own dialogue (e.g. judge speaks aloud).
+          if (scene.bypassVerdictRouting) {
+            return {
+              ...state,
+              screen: 'verdict',
+              currentSceneId: scene.nextSceneId,
+              trialTimerActive: false,
+              case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
+              case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+              otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
+            }
+          }
           return navigateToVerdict(state, scene.nextSceneId)
         }
         if (nextScene.isArgumentScene) {

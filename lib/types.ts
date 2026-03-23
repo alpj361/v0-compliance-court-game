@@ -162,6 +162,10 @@ export interface Scene {
   nextSceneId?: string
   isVerdictScene?: boolean
   verdictData?: VerdictData
+  // When true, navigating to nextSceneId uses it directly even if nextScene.isVerdictScene
+  // is true — bypasses credibility-based verdictRoutes routing. Use when the scene's
+  // own dialogue already delivered a specific verdict and the route must not be overridden.
+  bypassVerdictRouting?: boolean
   // For Chapter 3 of Case 2 — multi-select argument builder
   isArgumentScene?: boolean
   argumentPieces?: ArgumentPiece[]

@@ -441,6 +441,12 @@ export const case1: Case = {
 
     's1-verdict-scene': {
       id: 's1-verdict-scene',
+      // The judge already speaks the verdict aloud in this scene's dialogues.
+      // bypassVerdictRouting prevents the engine from re-routing via credibility-based
+      // verdictRoutes, so the player always lands on 's1-verdict' (CULPABLE) here.
+      // The credibility-gated routes (perfect/good/bad/null) are only reachable when
+      // the player fails to reach this scene (wrong answer branches → navigateToVerdict).
+      bypassVerdictRouting: true,
       dialogues: [
         {
           id: 'd1-19',
