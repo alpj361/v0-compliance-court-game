@@ -166,6 +166,12 @@ export interface Scene {
   // is true — bypasses credibility-based verdictRoutes routing. Use when the scene's
   // own dialogue already delivered a specific verdict and the route must not be overridden.
   bypassVerdictRouting?: boolean
+  // Credibility router: after this scene's dialogues finish, pick the next scene based on
+  // the player's current credibility. Routes are checked highest→lowest; first match wins.
+  // If no route matches, falls back to nextSceneId. No dialogues are required —
+  // a zero-dialogue router scene will skip instantly.
+  isCredibilityRouterScene?: boolean
+  credibilityRoutes?: { minCredibility: number; sceneId: string }[]
   // For Chapter 3 of Case 2 — multi-select argument builder
   isArgumentScene?: boolean
   argumentPieces?: ArgumentPiece[]

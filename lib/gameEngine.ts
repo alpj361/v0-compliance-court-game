@@ -567,6 +567,38 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
 
+      // Credibility router — pick next scene based on current credibility
+      if (scene.isCredibilityRouterScene && scene.credibilityRoutes?.length) {
+        const sorted = [...scene.credibilityRoutes].sort((a, b) => b.minCredibility - a.minCredibility)
+        const match = sorted.find((r) => state.credibility >= r.minCredibility)
+        const targetId = match?.sceneId ?? scene.nextSceneId
+        if (targetId && state.activeCase?.scenes[targetId]) {
+          const nextScene = state.activeCase.scenes[targetId]
+          if (nextScene.isVerdictScene) {
+            if (nextScene.bypassVerdictRouting) {
+              return {
+                ...state,
+                screen: 'verdict',
+                currentSceneId: targetId,
+                trialTimerActive: false,
+                case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
+                case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
+                otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
+              }
+            }
+            return navigateToVerdict(state, targetId)
+          }
+          return {
+            ...state,
+            currentSceneId: targetId,
+            currentDialogueIndex: 0,
+            isDialogueComplete: false,
+            timedObjectionActive: false,
+            timedObjectionExpired: false,
+          }
+        }
+      }
+
       if (scene.nextSceneId && state.activeCase?.scenes[scene.nextSceneId]) {
         const nextScene = state.activeCase.scenes[scene.nextSceneId]
         if (nextScene.isVerdictScene) {
