@@ -888,7 +888,7 @@ export const case2: Case = {
     // — Branch A verdicts —
     'verdict-a-loss': {
       id: 'verdict-a-loss',
-      isVerdict: true,
+      isVerdictScene: true,
       dialogues: [
         {
           id: 'vad1',
@@ -916,7 +916,7 @@ export const case2: Case = {
 
     'verdict-a-partial': {
       id: 'verdict-a-partial',
-      isVerdict: true,
+      isVerdictScene: true,
       dialogues: [
         {
           id: 'vap1',
@@ -945,7 +945,7 @@ export const case2: Case = {
     // — Branch B verdicts —
     'verdict-b-remediation': {
       id: 'verdict-b-remediation',
-      isVerdict: true,
+      isVerdictScene: true,
       dialogues: [
         {
           id: 'vbr1',
@@ -973,7 +973,7 @@ export const case2: Case = {
 
     'verdict-b-penalty': {
       id: 'verdict-b-penalty',
-      isVerdict: true,
+      isVerdictScene: true,
       dialogues: [
         {
           id: 'vbp1',
@@ -1002,7 +1002,7 @@ export const case2: Case = {
     // — Branch C verdicts —
     'verdict-c-best': {
       id: 'verdict-c-best',
-      isVerdict: true,
+      isVerdictScene: true,
       dialogues: [
         {
           id: 'vcb1',
@@ -1030,7 +1030,7 @@ export const case2: Case = {
 
     'verdict-c-penalty': {
       id: 'verdict-c-penalty',
-      isVerdict: true,
+      isVerdictScene: true,
       dialogues: [
         {
           id: 'vcp1',
@@ -1059,7 +1059,7 @@ export const case2: Case = {
     // — Branch D verdicts —
     'verdict-d-best': {
       id: 'verdict-d-best',
-      isVerdict: true,
+      isVerdictScene: true,
       dialogues: [
         {
           id: 'vdb1',
@@ -1087,7 +1087,7 @@ export const case2: Case = {
 
     'verdict-d-partial': {
       id: 'verdict-d-partial',
-      isVerdict: true,
+      isVerdictScene: true,
       dialogues: [
         {
           id: 'vdp1',
@@ -1116,7 +1116,7 @@ export const case2: Case = {
     // — Branch E verdict —
     'verdict-e-refused': {
       id: 'verdict-e-refused',
-      isVerdict: true,
+      isVerdictScene: true,
       dialogues: [
         {
           id: 've1',
