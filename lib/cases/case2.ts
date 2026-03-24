@@ -16,7 +16,15 @@ export const case2: Case = {
   briefing: `Toronto, March 2026. You are Nicolás, defense counsel retained by the bank on behalf of Alex M. — a financial advisor five months into his role with a perfect client satisfaction record.\n\nOSFI has opened a formal compliance hearing. The file contains three documented coaching sessions and a call monitoring report showing systematic gaps in mandatory client verification under FINTRAC Section 9.3 and OSFI Guideline E-21.\n\nAlex insists the outcomes were correct, the clients were satisfied, and the procedures were unnecessary in context. You have 90 minutes before the hearing. You must decide your approach.`,
   firstSceneId: 's1-first-meeting',
 
-  // ── Evidence — 7 documents + 1 instructional video ─────────────────────────
+  // ── Instructions video — appears as a button BEFORE the evidence list ──────
+  preTrialVideo: {
+    speakerName: 'Legal Advisor',
+    speakerTitle: 'OSFI Compliance Hearing — Defense Counsel Instructions',
+    videoSrc: 'https://drive.google.com/file/d/1leAZm5X0TLsOeHBjAFl4GKXh7gKMPNZ3/preview',
+    lines: [],
+  },
+
+  // ── Evidence — 7 documents ──────────────────────────────────────────────────
   evidence: [
     {
       id: 'ev-fintrac',
@@ -176,20 +184,6 @@ export const case2: Case = {
           { label: 'Current Status', value: 'Monitored — OSFI Hearing Pending', highlight: true },
         ],
         footer: 'Note: Mandatory OSFI compliance hearing scheduled March 2026. All financial recommendations reviewed and confirmed substantively appropriate. Compliance deficiency is procedural in nature.',
-      },
-    },
-    {
-      id: 'ev-video-osfi',
-      title: 'Legal Advisor — OSFI Hearing Process',
-      description: 'Video guide: OSFI compliance hearing rules and your role as defense counsel.',
-      detail: 'The Legal Advisor explains the OSFI compliance hearing process, your obligations as defense counsel, and the procedural options available to Alex M.',
-      type: 'document',
-      displayType: 'video',
-      isKey: true,
-      videoMeta: {
-        src: 'https://drive.google.com/file/d/1leAZm5X0TLsOeHBjAFl4GKXh7gKMPNZ3/preview',
-        title: 'OSFI Compliance Hearing: Rules of the Process',
-        description: 'The Legal Advisor explains OSFI hearing procedures, defense counsel obligations, and the options available when facing documented compliance incidents.',
       },
     },
   ],

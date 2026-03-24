@@ -221,6 +221,7 @@ export interface PreTrialVideo {
   speakerName: string
   speakerTitle: string
   lines: string[]
+  videoSrc?: string   // optional embed URL (e.g. Google Drive /preview)
 }
 
 export interface Case {
