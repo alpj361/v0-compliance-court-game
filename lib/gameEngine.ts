@@ -4,7 +4,7 @@
 // All game state managed via useReducer. No external dependencies.
 
 import { useReducer, useCallback, useEffect, useState } from 'react'
-import type { Case, Scene, DialogueLine, GameId } from '@/lib/gameData'
+import type { Case, Scene, DialogueLine, GameId, HearingMessage } from '@/lib/gameData'
 import { case1, case2 } from '@/lib/gameData'
 import { otfCase1 } from '@/lib/otfGameData'
 
@@ -34,6 +34,7 @@ interface RawSave {
   case1Complete: boolean
   case2Complete: boolean
   otf1Complete: boolean
+  otf2Complete: boolean
   currentGame: GameId | null
   trialTimerActive: boolean
   trialTimeLeft: number
@@ -42,6 +43,13 @@ interface RawSave {
   selectedArgumentIds: string[]
   argumentSubmitted: boolean
   argumentFeedback: string | null
+  // Email client
+  emailClientFolder: string
+  emailClientOpenId: string | null
+  collectedEvidenceIds: string[]
+  hearingStarted: boolean
+  hearingLog: HearingMessage[]
+  pendingHearingAttachments: string[]
 }
 
 function persistSave(state: GameState): void {
@@ -62,6 +70,7 @@ function persistSave(state: GameState): void {
       case1Complete: state.case1Complete,
       case2Complete: state.case2Complete,
       otf1Complete: state.otf1Complete,
+      otf2Complete: state.otf2Complete,
       currentGame: state.currentGame,
       trialTimerActive: state.trialTimerActive,
       trialTimeLeft: state.trialTimeLeft,
@@ -70,6 +79,13 @@ function persistSave(state: GameState): void {
       selectedArgumentIds: [...state.selectedArgumentIds],
       argumentSubmitted: state.argumentSubmitted,
       argumentFeedback: state.argumentFeedback,
+      // Email client
+      emailClientFolder: state.emailClientFolder,
+      emailClientOpenId: state.emailClientOpenId,
+      collectedEvidenceIds: [...state.collectedEvidenceIds],
+      hearingStarted: state.hearingStarted,
+      hearingLog: state.hearingLog,
+      pendingHearingAttachments: [...state.pendingHearingAttachments],
     }
     localStorage.setItem(SAVE_KEY, JSON.stringify(raw))
   } catch { /* storage unavailable */ }
@@ -80,25 +96,26 @@ function clearPersistSave(): void {
   try { localStorage.removeItem(SAVE_KEY) } catch { /* noop */ }
 }
 
-function saveProgress(case1Complete: boolean, case2Complete: boolean, otf1Complete: boolean): void {
+function saveProgress(case1Complete: boolean, case2Complete: boolean, otf1Complete: boolean, otf2Complete: boolean): void {
   if (typeof window === 'undefined') return
   try {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ case1Complete, case2Complete, otf1Complete }))
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ case1Complete, case2Complete, otf1Complete, otf2Complete }))
   } catch { /* noop */ }
 }
 
-function loadProgress(): { case1Complete: boolean; case2Complete: boolean; otf1Complete: boolean } {
-  if (typeof window === 'undefined') return { case1Complete: false, case2Complete: false, otf1Complete: false }
+function loadProgress(): { case1Complete: boolean; case2Complete: boolean; otf1Complete: boolean; otf2Complete: boolean } {
+  if (typeof window === 'undefined') return { case1Complete: false, case2Complete: false, otf1Complete: false, otf2Complete: false }
   try {
     const raw = localStorage.getItem(PROGRESS_KEY)
-    if (!raw) return { case1Complete: false, case2Complete: false, otf1Complete: false }
+    if (!raw) return { case1Complete: false, case2Complete: false, otf1Complete: false, otf2Complete: false }
     const data = JSON.parse(raw)
     return {
       case1Complete: Boolean(data.case1Complete),
       case2Complete: Boolean(data.case2Complete),
       otf1Complete: Boolean(data.otf1Complete ?? false),
+      otf2Complete: Boolean(data.otf2Complete ?? false),
     }
-  } catch { return { case1Complete: false, case2Complete: false, otf1Complete: false } }
+  } catch { return { case1Complete: false, case2Complete: false, otf1Complete: false, otf2Complete: false } }
 }
 
 function clearProgress(): void {
@@ -161,6 +178,7 @@ function loadPersistSave(): Partial<GameState> | null {
       case1Complete: data.case1Complete,
       case2Complete: data.case2Complete,
       otf1Complete: Boolean(data.otf1Complete ?? false),
+      otf2Complete: Boolean(data.otf2Complete ?? false),
       currentGame: (data.currentGame as GameId | null) ?? null,
       timedObjectionActive: false,
       timedObjectionExpired: false,
@@ -172,6 +190,13 @@ function loadPersistSave(): Partial<GameState> | null {
       selectedArgumentIds: new Set(data.selectedArgumentIds),
       argumentSubmitted: data.argumentSubmitted,
       argumentFeedback: data.argumentFeedback,
+      // Email client
+      emailClientFolder: (data.emailClientFolder as GameState['emailClientFolder']) ?? 'inbox',
+      emailClientOpenId: data.emailClientOpenId ?? null,
+      collectedEvidenceIds: new Set(data.collectedEvidenceIds ?? []),
+      hearingStarted: Boolean(data.hearingStarted ?? false),
+      hearingLog: (data.hearingLog ?? []) as HearingMessage[],
+      pendingHearingAttachments: new Set(data.pendingHearingAttachments ?? []),
     }
   } catch { return null }
 }
@@ -194,6 +219,7 @@ export type GameScreen =
   | 'case-select'
   | 'briefing'
   | 'investigation'
+  | 'email-client'       // Email-based cases (OTF Case 2+): email client + hearing chat
   | 'trial'
   | 'argument-builder'   // Case 2 Ch3 multi-select closing
   | 'verdict'
@@ -235,6 +261,14 @@ export interface GameState {
   selectedArgumentIds: Set<string>
   argumentSubmitted: boolean
   argumentFeedback: string | null
+  // ── Email client state (OTF Case 2+) ────────────────────────────────────────
+  emailClientFolder: 'inbox' | 'archive' | 'evidence' | 'profiles'
+  emailClientOpenId: string | null          // which evidence item is currently open
+  collectedEvidenceIds: Set<string>         // evidence items the player has marked as relevant
+  hearingStarted: boolean                   // whether player has joined the hearing chat
+  hearingLog: HearingMessage[]              // accumulated committee + player messages
+  pendingHearingAttachments: Set<string>    // evidence IDs staged for the current response
+  otf2Complete: boolean
 }
 
 const initialState: GameState = {
@@ -264,6 +298,14 @@ const initialState: GameState = {
   selectedArgumentIds: new Set(),
   argumentSubmitted: false,
   argumentFeedback: null,
+  // Email client
+  emailClientFolder: 'inbox',
+  emailClientOpenId: null,
+  collectedEvidenceIds: new Set(),
+  hearingStarted: false,
+  hearingLog: [],
+  pendingHearingAttachments: new Set(),
+  otf2Complete: false,
 }
 
 export type GameAction =
@@ -299,6 +341,17 @@ export type GameAction =
   | { type: 'SELECT_GAME'; payload: GameId }
   | { type: 'GO_TO_GAME_SELECT' }
   | { type: 'LOAD_SAVED_STATE'; payload: Partial<GameState> }
+  // ── Email client actions ─────────────────────────────────────────────────────
+  | { type: 'START_EMAIL_CLIENT' }
+  | { type: 'SWITCH_EMAIL_FOLDER'; payload: 'inbox' | 'archive' | 'evidence' | 'profiles' }
+  | { type: 'OPEN_EMAIL_ITEM'; payload: string | null }
+  | { type: 'MARK_AS_EVIDENCE'; payload: string }
+  | { type: 'UNMARK_EVIDENCE'; payload: string }
+  | { type: 'JOIN_HEARING' }
+  | { type: 'ADVANCE_HEARING_DIALOGUE'; payload: HearingMessage }
+  | { type: 'TOGGLE_HEARING_ATTACHMENT'; payload: string }
+  | { type: 'SEND_HEARING_RESPONSE'; payload: { message: HearingMessage; isCorrect: boolean; penalty?: number; nextSceneId?: string; evidenceBonus?: number; evidencePenalty?: number } }
+  | { type: 'SET_OTF2_CASE_COMPLETE'; payload: { complete: boolean } }
 
 function getCurrentScene(state: GameState): Scene | null {
   if (!state.activeCase || !state.currentSceneId) return null
@@ -325,6 +378,7 @@ function navigateToVerdict(state: GameState, fallbackSceneId?: string): GameStat
     case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
     case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
     otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
+    otf2Complete: state.activeCase?.id === 'otf-2' ? true : state.otf2Complete,
   }
   // Pre-verdict scene: has dialogues and is not itself isVerdictScene → play in trial first
   if (targetScene && !targetScene.isVerdictScene && targetScene.dialogues.length > 0) {
@@ -369,7 +423,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         activeCase: action.payload,
         currentSceneId: action.payload.firstSceneId,
         currentDialogueIndex: 0,
-        credibility: 100,
+        credibility: action.payload.initialCredibility ?? 100,
         evidenceReviewed: new Set(),
         isDialogueComplete: false,
         wrongAnswerMessage: null,
@@ -384,6 +438,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         selectedArgumentIds: new Set(),
         argumentSubmitted: false,
         argumentFeedback: null,
+        // Reset email client state
+        emailClientFolder: 'inbox',
+        emailClientOpenId: null,
+        collectedEvidenceIds: new Set(),
+        hearingStarted: false,
+        hearingLog: [],
+        pendingHearingAttachments: new Set(),
         screen: 'briefing',
       }
 
@@ -934,6 +995,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
         case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
         otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
+        otf2Complete: state.activeCase?.id === 'otf-2' ? true : state.otf2Complete,
       }
 
     case 'GO_TO_DEBRIEF':
@@ -943,6 +1005,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         case1Complete: state.activeCase?.id === 'case-1' ? true : state.case1Complete,
         case2Complete: state.activeCase?.id === 'case-2' ? true : state.case2Complete,
         otf1Complete: state.activeCase?.id === 'otf-1' ? true : state.otf1Complete,
+        otf2Complete: state.activeCase?.id === 'otf-2' ? true : state.otf2Complete,
       }
 
     case 'RESTART_CASE':
@@ -950,7 +1013,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         currentSceneId: state.activeCase!.firstSceneId,
         currentDialogueIndex: 0,
-        credibility: 100,
+        credibility: state.activeCase?.initialCredibility ?? 100,
         isDialogueComplete: false,
         wrongAnswerMessage: null,
         pendingOverlay: null,
@@ -965,6 +1028,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         selectedArgumentIds: new Set(),
         argumentSubmitted: false,
         argumentFeedback: null,
+        // Reset email client state
+        emailClientFolder: 'inbox',
+        emailClientOpenId: null,
+        collectedEvidenceIds: new Set(),
+        hearingStarted: false,
+        hearingLog: [],
+        pendingHearingAttachments: new Set(),
         screen: 'briefing',
       }
 
@@ -984,6 +1054,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SET_OTF_CASE_COMPLETE':
       return { ...state, otf1Complete: action.payload.complete }
 
+    case 'SET_OTF2_CASE_COMPLETE':
+      return { ...state, otf2Complete: action.payload.complete }
+
     case 'SELECT_GAME':
       return { ...state, currentGame: action.payload, screen: 'main-menu' }
 
@@ -993,6 +1066,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         case1Complete: state.case1Complete,
         case2Complete: state.case2Complete,
         otf1Complete: state.otf1Complete,
+        otf2Complete: state.otf2Complete,
       }
 
     case 'GO_TO_MAIN_MENU':
@@ -1002,8 +1076,119 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         case1Complete: state.case1Complete,
         case2Complete: state.case2Complete,
         otf1Complete: state.otf1Complete,
+        otf2Complete: state.otf2Complete,
         screen: 'main-menu',
       }
+
+    // ── Email client actions ──────────────────────────────────────────────────
+
+    case 'START_EMAIL_CLIENT':
+      return { ...state, screen: 'email-client', emailClientFolder: 'inbox', emailClientOpenId: null }
+
+    case 'SWITCH_EMAIL_FOLDER':
+      return { ...state, emailClientFolder: action.payload, emailClientOpenId: null }
+
+    case 'OPEN_EMAIL_ITEM':
+      return { ...state, emailClientOpenId: action.payload }
+
+    case 'MARK_AS_EVIDENCE': {
+      const next = new Set(state.collectedEvidenceIds)
+      next.add(action.payload)
+      // Also mark as reviewed
+      const reviewed = new Set(state.evidenceReviewed)
+      reviewed.add(action.payload)
+      return { ...state, collectedEvidenceIds: next, evidenceReviewed: reviewed }
+    }
+
+    case 'UNMARK_EVIDENCE': {
+      const next = new Set(state.collectedEvidenceIds)
+      next.delete(action.payload)
+      return { ...state, collectedEvidenceIds: next }
+    }
+
+    case 'JOIN_HEARING': {
+      if (!state.activeCase?.hearingStartId) return state
+      const startMsg: HearingMessage = {
+        id: 'system-start',
+        sender: 'Sistema',
+        senderRole: 'system',
+        text: 'Audiencia iniciada — Comité de Ética, Caso #0312. Los participantes están conectados.',
+        timestamp: '10:00',
+      }
+      return {
+        ...state,
+        hearingStarted: true,
+        currentSceneId: state.activeCase.hearingStartId,
+        currentDialogueIndex: 0,
+        isDialogueComplete: false,
+        hearingLog: [startMsg],
+        pendingHearingAttachments: new Set(),
+        emailClientFolder: 'inbox',
+      }
+    }
+
+    case 'ADVANCE_HEARING_DIALOGUE': {
+      // Append the message to the log and advance to next dialogue
+      const newLog = [...state.hearingLog, action.payload]
+      const scene = getCurrentScene(state)
+      if (!scene) return { ...state, hearingLog: newLog }
+
+      const nextIndex = state.currentDialogueIndex + 1
+      if (nextIndex < scene.dialogues.length) {
+        return { ...state, hearingLog: newLog, currentDialogueIndex: nextIndex, isDialogueComplete: false }
+      }
+      // Scene finished — advance to nextSceneId
+      if (scene.nextSceneId && state.activeCase?.scenes[scene.nextSceneId]) {
+        const nextScene = state.activeCase.scenes[scene.nextSceneId]
+        if (nextScene.isVerdictScene) {
+          const base = { ...state, hearingLog: newLog, otf2Complete: true }
+          return navigateToVerdict(base, scene.nextSceneId)
+        }
+        return { ...state, hearingLog: newLog, currentSceneId: scene.nextSceneId, currentDialogueIndex: 0, isDialogueComplete: false }
+      }
+      return { ...state, hearingLog: newLog }
+    }
+
+    case 'TOGGLE_HEARING_ATTACHMENT': {
+      const next = new Set(state.pendingHearingAttachments)
+      if (next.has(action.payload)) next.delete(action.payload)
+      else next.add(action.payload)
+      return { ...state, pendingHearingAttachments: next }
+    }
+
+    case 'SEND_HEARING_RESPONSE': {
+      const { message, isCorrect, penalty, nextSceneId, evidenceBonus, evidencePenalty } = action.payload
+      // Calculate attachment bonus/penalty
+      const scene = getCurrentScene(state)
+      const bonusCfg = scene?.hearingEvidenceBonus
+      let attachDelta = 0
+      if (bonusCfg && state.pendingHearingAttachments.size > 0) {
+        const hasCorrect = [...state.pendingHearingAttachments].some(id => bonusCfg.correctIds.includes(id))
+        const hasWrong = [...state.pendingHearingAttachments].some(id => !bonusCfg.correctIds.includes(id))
+        if (hasCorrect && !hasWrong) attachDelta = evidenceBonus ?? bonusCfg.bonus
+        else if (hasWrong) attachDelta = -(evidencePenalty ?? bonusCfg.penalty)
+      }
+      const textDelta = isCorrect ? 0 : -(penalty ?? 15)
+      const newCredibility = Math.max(0, Math.min(100, state.credibility + textDelta + attachDelta))
+      const newLog = [...state.hearingLog, message]
+
+      const targetSceneId = nextSceneId ?? getCurrentScene(state)?.nextSceneId
+      const baseState = {
+        ...state,
+        credibility: newCredibility,
+        hearingLog: newLog,
+        pendingHearingAttachments: new Set<string>(),
+        isWrongAnswerShaking: !isCorrect,
+        wrongAnswerMessage: !isCorrect ? (action.payload.message.text) : null,
+      }
+
+      if (!targetSceneId || !state.activeCase?.scenes[targetSceneId]) return baseState
+      const nextScene = state.activeCase.scenes[targetSceneId]
+      if (nextScene.isVerdictScene) {
+        return navigateToVerdict({ ...baseState, otf2Complete: true }, targetSceneId)
+      }
+      return { ...baseState, currentSceneId: targetSceneId, currentDialogueIndex: 0, isDialogueComplete: false }
+    }
 
     case 'LOAD_SAVED_STATE':
       return { ...initialState, ...action.payload }
@@ -1033,6 +1218,9 @@ export function useGameEngine() {
       if (progress.otf1Complete) {
         dispatch({ type: 'SET_OTF_CASE_COMPLETE', payload: { complete: true } })
       }
+      if (progress.otf2Complete) {
+        dispatch({ type: 'SET_OTF2_CASE_COMPLETE', payload: { complete: true } })
+      }
     }
   }, [])
 
@@ -1044,8 +1232,8 @@ export function useGameEngine() {
 
   // Persist case completion flags independently so they survive debrief/menu resets
   useEffect(() => {
-    saveProgress(state.case1Complete, state.case2Complete, state.otf1Complete)
-  }, [state.case1Complete, state.case2Complete, state.otf1Complete])
+    saveProgress(state.case1Complete, state.case2Complete, state.otf1Complete, state.otf2Complete)
+  }, [state.case1Complete, state.case2Complete, state.otf1Complete, state.otf2Complete])
 
   // Clear in-progress save when session ends (debrief), but keep progress intact
   useEffect(() => {
