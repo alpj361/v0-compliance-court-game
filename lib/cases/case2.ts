@@ -889,6 +889,14 @@ export const case2: Case = {
     'verdict-a-loss': {
       id: 'verdict-a-loss',
       isVerdictScene: true,
+      verdictData: {
+        outcome: 'guilty',
+        title: 'Formal Adverse Finding — Monetary Penalty Assessed',
+        subtitle: 'Alex M. — OSFI B-8 / FINTRAC compliance hearing — Branch A',
+        lessonTitle: 'Procedural Deflection Backfires',
+        lessonText: 'OSFI compliance hearings evaluate procedural compliance, not substantive outcomes. A defense that focuses on results rather than the regulatory framework will not succeed. Three signed coaching logs required acknowledgment — not challenge.\n\nThe aggressive strategy failed. The panel noted both the deflection and the absence of a remediation proposal. The outcome was more severe than it needed to be.',
+        regulationRef: 'OSFI B-8 Guideline / FINTRAC PCMLTFA, s.9.6',
+      },
       dialogues: [
         {
           id: 'vad1',
@@ -917,6 +925,14 @@ export const case2: Case = {
     'verdict-a-partial': {
       id: 'verdict-a-partial',
       isVerdictScene: true,
+      verdictData: {
+        outcome: 'guilty-reduced',
+        title: 'Remediation Order — No Penalty',
+        subtitle: 'Alex M. — OSFI B-8 / FINTRAC compliance hearing — Branch A',
+        lessonTitle: 'Mid-Hearing Recovery',
+        lessonText: 'It is always better to enter a regulatory hearing with the right strategy. Recovering mid-hearing is possible — but it costs credibility and limits your options. Read the file before forming a defense.\n\nYou recovered mid-hearing. The panel noted the change — but credited the acknowledgment. A workable outcome from a poor start.',
+        regulationRef: 'OSFI B-8 Guideline / FINTRAC PCMLTFA, s.9.6',
+      },
       dialogues: [
         {
           id: 'vap1',
@@ -946,6 +962,14 @@ export const case2: Case = {
     'verdict-b-remediation': {
       id: 'verdict-b-remediation',
       isVerdictScene: true,
+      verdictData: {
+        outcome: 'acquitted',
+        title: 'Remediation Order Accepted — No Penalty',
+        subtitle: 'Alex M. — OSFI B-8 / FINTRAC compliance hearing — Branch B',
+        lessonTitle: 'Listen, Read, Reconcile',
+        lessonText: 'Effective defense counsel listens to the client and reads the record — then builds a strategy that reconciles both. In a regulatory hearing with documented incidents, a well-structured remediation proposal is often more valuable than a challenge.\n\nA solid outcome. You listened to Alex, read the record, identified the gap, and proposed a credible remedy. The panel had what it needed to close the file constructively.',
+        regulationRef: 'OSFI B-8 Guideline / FINTRAC PCMLTFA, s.9.6',
+      },
       dialogues: [
         {
           id: 'vbr1',
@@ -974,6 +998,14 @@ export const case2: Case = {
     'verdict-b-penalty': {
       id: 'verdict-b-penalty',
       isVerdictScene: true,
+      verdictData: {
+        outcome: 'guilty',
+        title: 'Formal Finding — Monetary Penalty',
+        subtitle: 'Alex M. — OSFI B-8 / FINTRAC compliance hearing — Branch B',
+        lessonTitle: 'Wrong Outcome, Right Preparation',
+        lessonText: 'In a regulatory hearing with documented and signed compliance incidents, the question is not whether a finding will be made — it\'s what the remedy will be. Proposing "no further action" signals minimization and invites a harsher outcome.\n\nYou prepared well but proposed the wrong outcome. The panel needed a remediation plan — not an acquittal.',
+        regulationRef: 'OSFI B-8 Guideline / FINTRAC PCMLTFA, s.9.6',
+      },
       dialogues: [
         {
           id: 'vbp1',
@@ -1003,6 +1035,14 @@ export const case2: Case = {
     'verdict-c-best': {
       id: 'verdict-c-best',
       isVerdictScene: true,
+      verdictData: {
+        outcome: 'acquitted',
+        title: 'Remediation Order — Optimal Outcome',
+        subtitle: 'Alex M. — OSFI B-8 / FINTRAC compliance hearing — Branch C',
+        lessonTitle: 'Read First, Then Strategize',
+        lessonText: 'Reading the file first is not a luxury — it is the foundation of competent representation. When the documentary record is clear, acknowledgment combined with a credible remediation proposal consistently produces the best available outcome.\n\nThe best possible outcome from a difficult file. You read the evidence, understood the law, acknowledged the findings, and proposed a precise remedy.',
+        regulationRef: 'OSFI B-8 Guideline / FINTRAC PCMLTFA, s.9.6',
+      },
       dialogues: [
         {
           id: 'vcb1',
@@ -1031,6 +1071,14 @@ export const case2: Case = {
     'verdict-c-penalty': {
       id: 'verdict-c-penalty',
       isVerdictScene: true,
+      verdictData: {
+        outcome: 'guilty',
+        title: 'Formal Finding — Penalty Assessed',
+        subtitle: 'Alex M. — OSFI B-8 / FINTRAC compliance hearing — Branch C',
+        lessonTitle: 'Knowledge Without Strategy',
+        lessonText: 'Reading the file is necessary — but it must translate into the right strategy. When the record is unambiguous, a request for "no further action" signals minimization and undermines the credibility that thorough preparation had built.\n\nYou read the file — and then proposed the one outcome the file clearly could not support.',
+        regulationRef: 'OSFI B-8 Guideline / FINTRAC PCMLTFA, s.9.6',
+      },
       dialogues: [
         {
           id: 'vcp1',
@@ -1060,6 +1108,14 @@ export const case2: Case = {
     'verdict-d-best': {
       id: 'verdict-d-best',
       isVerdictScene: true,
+      verdictData: {
+        outcome: 'acquitted',
+        title: 'Remediation Order — No Penalty',
+        subtitle: 'Alex M. — OSFI B-8 / FINTRAC compliance hearing — Branch D',
+        lessonTitle: 'Honest Counsel, Prepared Client',
+        lessonText: 'Honesty with your client — even when the news is difficult — enables better preparation and more credible hearing performance. A client who understands his position is more effective than one who walks in believing he has won.\n\nHonest counsel, a prepared client, and a specific remediation proposal. The panel credited all three.',
+        regulationRef: 'OSFI B-8 Guideline / FINTRAC PCMLTFA, s.9.6',
+      },
       dialogues: [
         {
           id: 'vdb1',
@@ -1088,6 +1144,14 @@ export const case2: Case = {
     'verdict-d-partial': {
       id: 'verdict-d-partial',
       isVerdictScene: true,
+      verdictData: {
+        outcome: 'guilty-reduced',
+        title: 'Remediation Order — Suspended Penalty',
+        subtitle: 'Alex M. — OSFI B-8 / FINTRAC compliance hearing — Branch D',
+        lessonTitle: 'Specificity in Remediation',
+        lessonText: 'Specificity in remediation proposals matters. The panel needs concrete, measurable, time-bound steps. Vague or open-ended proposals shift the burden back to OSFI and reduce the likelihood of a clean outcome.\n\nHonest preparation and a credible hearing performance — but the remediation proposal wasn\'t specific enough to close the file cleanly.',
+        regulationRef: 'OSFI B-8 Guideline / FINTRAC PCMLTFA, s.9.6',
+      },
       dialogues: [
         {
           id: 'vdp1',
@@ -1117,6 +1181,14 @@ export const case2: Case = {
     'verdict-e-refused': {
       id: 'verdict-e-refused',
       isVerdictScene: true,
+      verdictData: {
+        outcome: 'guilty',
+        title: 'Unrepresented — Formal Adverse Finding and Penalty',
+        subtitle: 'Alex M. — OSFI B-8 / FINTRAC compliance hearing — Branch E',
+        lessonTitle: 'A File Summary Is Not a Case',
+        lessonText: 'A file summary is not a case. Defense counsel\'s obligation is to review the complete record before forming any judgment about the viability of a defense. Declining representation based on incomplete information is a failure of professional judgment — not a defense of it.\n\nThe OSFI hearing proceeded without defense counsel. The case was defensible. A structured remediation proposal, delivered by counsel, would have produced a very different result.',
+        regulationRef: 'OSFI B-8 Guideline / FINTRAC PCMLTFA, s.9.6',
+      },
       dialogues: [
         {
           id: 've1',
