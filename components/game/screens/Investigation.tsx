@@ -208,14 +208,30 @@ export function Investigation({ state, dispatch }: InvestigationProps) {
               </button>
             </div>
 
-            {/* Video lines */}
-            <div className="px-5 py-5 flex flex-col gap-3">
-              {activeCase.preTrialVideo.lines.map((line, i) => (
-                <p key={i} className="text-sm font-sans text-court-white/85 leading-relaxed">
-                  {line}
-                </p>
-              ))}
-            </div>
+            {/* Embedded video (Google Drive / iframe) */}
+            {activeCase.preTrialVideo.videoSrc && (
+              <div className="px-5 pt-4 pb-2">
+                <div className="relative w-full overflow-hidden rounded-sm border border-blue-600/20" style={{ paddingTop: '56.25%' }}>
+                  <iframe
+                    src={activeCase.preTrialVideo.videoSrc}
+                    className="absolute inset-0 w-full h-full"
+                    allow="autoplay"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Text lines (shown when no video, or as caption below video) */}
+            {activeCase.preTrialVideo.lines.length > 0 && (
+              <div className="px-5 py-5 flex flex-col gap-3">
+                {activeCase.preTrialVideo.lines.map((line, i) => (
+                  <p key={i} className="text-sm font-sans text-court-white/85 leading-relaxed">
+                    {line}
+                  </p>
+                ))}
+              </div>
+            )}
 
             <div className="border-t border-blue-600/20 px-5 py-3 flex justify-end">
               <button
