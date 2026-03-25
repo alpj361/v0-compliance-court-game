@@ -36,6 +36,13 @@ export type Portrait =
   | 'vargas-agent-pressing'
   | 'mendoza-friendly'
   | 'mendoza-threatening'
+  // Ethics Committee (OTF Case 2)
+  | 'paz-herrera-neutral'
+  | 'fernando-rojo-neutral'
+  | 'clara-mendoza-neutral'
+  | 'marco-valdes-neutral'
+  | 'lupita-morales-neutral'
+  | 'salinas-rrhh-neutral'
 
 export type CharacterSide = 'left' | 'right' | 'center'
 
@@ -254,7 +261,10 @@ export interface Scene {
 }
 
 export interface VerdictData {
-  outcome: 'guilty' | 'guilty-reduced' | 'acquitted' | 'null-trial' | 'postponed' | 'lesson' | 'acuerdo' | 'tension-controlada' | 'sacrificio' | 'crisis' | 'sin-tiempo'
+  outcome:
+    | 'guilty' | 'guilty-reduced' | 'acquitted' | 'null-trial' | 'postponed' | 'lesson'
+    | 'acuerdo' | 'tension-controlada' | 'sacrificio' | 'crisis' | 'sin-tiempo'
+    | 'investigacion-abierta' | 'revision-preliminar' | 'caso-archivado'
   title: string
   subtitle: string
   lessonTitle: string
