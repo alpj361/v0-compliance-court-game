@@ -313,4 +313,6 @@ export interface Case {
   initialCredibility?: number
   // Scene ID where the ethics committee hearing begins
   hearingStartId?: string
+  // Override player name displayed as speaker during choices (default: 'Nicolas')
+  playerName?: string
 }
