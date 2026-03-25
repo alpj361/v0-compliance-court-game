@@ -16,7 +16,7 @@ export const inboxEvidence: EvidenceCard[] = [
     emailFolder: 'inbox',
     emailMeta: {
       from: 'Comité de Ética <etica@corp.gt>',
-      to: 'Nicolas García <n.garcia@corp.gt>',
+      to: 'Damián García <d.garcia@corp.gt>',
       date: 'Mié, 25 mar 2026, 08:15',
       subject: 'Convocatoria Audiencia #0312 — Caso de Denuncia',
       body: `Estimado Lic. García,
@@ -45,10 +45,10 @@ Presidenta, Comité de Ética Corporativo`,
     emailFolder: 'inbox',
     emailMeta: {
       from: 'Carlos Menchú <c.menchu@corp.gt>',
-      to: 'Nicolas García <n.garcia@corp.gt>',
+      to: 'Damián García <d.garcia@corp.gt>',
       date: 'Vie, 20 mar 2026, 17:42',
       subject: 'Algo que necesito contarle',
-      body: `Don Nicolás,
+      body: `Don Damián,
 
 Perdone que le escriba así, pero no sé a quién más decirle esto.
 
@@ -56,7 +56,7 @@ El 14 de febrero, como a las 6:45 pm, yo pasé por el pasillo del archivo porque
 
 Lupita no dijo nada. Se veía como si quisiera que yo me fuera.
 
-Yo no quiero problemas, don Nicolás. Pero tampoco puedo quedarme callado si esto sigue.
+Yo no quiero problemas, don Damián. Pero tampoco puedo quedarme callado si esto sigue.
 
 Cuente conmigo si me necesita,
 Carlos`,
@@ -73,7 +73,7 @@ Carlos`,
     emailFolder: 'inbox',
     emailMeta: {
       from: 'Soporte IT <it@corp.gt>',
-      to: 'Nicolas García <n.garcia@corp.gt>',
+      to: 'Damián García <d.garcia@corp.gt>',
       date: 'Mié, 18 mar 2026, 11:05',
       subject: 'Reporte de Accesos Inusuales — Carpeta ARCHIVO-L',
       body: `Lic. García,
@@ -103,7 +103,7 @@ Depto. de Soporte IT`,
     emailFolder: 'inbox',
     emailMeta: {
       from: 'Valentina Cruz <v.cruz@externos.gt>',
-      to: 'Nicolas García <n.garcia@corp.gt>',
+      to: 'Damián García <d.garcia@corp.gt>',
       date: 'Dom, 15 mar 2026, 20:18',
       subject: 'Re: Referencia — Marco Valdés',
       body: `Lic. García,
@@ -132,10 +132,10 @@ Valentina Cruz`,
     emailFolder: 'inbox',
     emailMeta: {
       from: 'Lupita Morales <l.morales@corp.gt>',
-      to: 'Nicolas García <n.garcia@corp.gt>',
+      to: 'Damián García <d.garcia@corp.gt>',
       date: 'Mar, 24 mar 2026, 22:47',
       subject: 'Necesito hablarle de algo',
-      body: `Don Nicolás,
+      body: `Don Damián,
 
 Le escribo tarde porque de día no me siento segura de escribir esto desde la oficina.
 
@@ -168,7 +168,7 @@ export const archiveEvidence: EvidenceCard[] = [
     emailFolder: 'archive',
     emailThreadMeta: {
       subject: 'Re: Reunión de seguimiento — Feb 14',
-      participants: ['Lupita Morales', 'Marco Valdés', 'Nicolas García (CC accidental)'],
+      participants: ['Lupita Morales', 'Marco Valdés', 'Damián García (CC accidental)'],
       emails: [
         {
           id: 'th1',
@@ -184,7 +184,7 @@ Lupita`,
         {
           id: 'th2',
           from: 'Marco Valdés <m.valdes@corp.gt>',
-          to: 'Lupita Morales <l.morales@corp.gt>; Nicolas García <n.garcia@corp.gt>',
+          to: 'Lupita Morales <l.morales@corp.gt>; Damián García <d.garcia@corp.gt>',
           date: 'Sáb, 14 feb 2026, 09:34',
           body: `Lupita, lo de ayer fue una broma. No tienes que ponerte así.
 
@@ -192,7 +192,7 @@ Además, nadie va a creer lo que dices. Llevamos 7 años aquí y tú llevas 3. S
 
 Marco
 
-[Nota: Nicolas García fue incluido en CC por error — correo reenviado automáticamente por la lista del grupo ARCHIVO-GENERAL]`,
+[Nota: Damián García fue incluido en CC por error — correo reenviado automáticamente por la lista del grupo ARCHIVO-GENERAL]`,
           isHighlighted: true,
           highlightNote: '⚠ Amenaza implícita + referencia a años de servicio como factor de poder',
         },

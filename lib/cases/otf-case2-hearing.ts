@@ -218,7 +218,7 @@ export const sceneHearingMarco: Scene = {
       speaker: 'Lic. Fernando Rojo',
       portrait: 'fernando-rojo-neutral',
       side: 'left',
-      text: 'También menciona que Nicolás García tiene un "conflicto de interés personal" en este caso y que sus motivaciones para presentarlo son cuestionables.',
+      text: 'También menciona que Damián García tiene un "conflicto de interés personal" en este caso y que sus motivaciones para presentarlo son cuestionables.',
     },
     {
       id: 'marco-paz-2',
