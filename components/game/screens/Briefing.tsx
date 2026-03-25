@@ -61,6 +61,12 @@ export function Briefing({ state, dispatch }: BriefingProps) {
             </div>
             <div className="text-sm font-serif font-semibold text-foreground mt-0.5">
               {isOTF ? `Rol: ${activeCase.roleLabel}` : `Nicolas — ${activeCase.roleLabel}`}
+              {activeCase.useEmailClient
+                ? activeCase.roleLabel
+                : isOTF
+                  ? `Asistente Técnico — ${activeCase.roleLabel}`
+                  : `Nicolas — ${activeCase.roleLabel}`
+              }
             </div>
           </div>
         </div>
@@ -69,7 +75,7 @@ export function Briefing({ state, dispatch }: BriefingProps) {
       {/* Actions */}
       <div className="flex flex-col items-center gap-3 w-full max-w-sm">
         <button
-          onClick={() => dispatch({ type: 'START_INVESTIGATION' })}
+          onClick={() => dispatch({ type: activeCase.useEmailClient ? 'START_EMAIL_CLIENT' : 'START_INVESTIGATION' })}
           className={cn(
             'w-full py-4 font-serif font-bold text-base tracking-widest uppercase',
             ctaBg,
@@ -79,9 +85,11 @@ export function Briefing({ state, dispatch }: BriefingProps) {
           {investigationLabel}
         </button>
         <p className="text-[10px] text-muted-foreground font-mono text-center">
-          {isOTF
-            ? 'Revisa los informes antes de iniciar la reunión'
-            : 'Study all evidence cards before entering the courtroom'
+          {activeCase.useEmailClient
+            ? 'Revisa tu correo y recopila evidencia antes de la audiencia'
+            : isOTF
+              ? 'Revisa los informes antes de iniciar la reunión'
+              : 'Study all evidence cards before entering the courtroom'
           }
         </p>
       </div>

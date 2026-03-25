@@ -1,17 +1,18 @@
 'use client'
 
 import { useGameEngine } from '@/lib/gameEngine'
-import { GameSelect }     from '@/components/game/screens/GameSelect'
-import { MainMenu }        from '@/components/game/screens/MainMenu'
-import { CaseSelect }      from '@/components/game/screens/CaseSelect'
-import { Briefing }        from '@/components/game/screens/Briefing'
-import { Investigation }   from '@/components/game/screens/Investigation'
-import { Trial }           from '@/components/game/screens/Trial'
-import { TrialChat }       from '@/components/game/screens/TrialChat'
-import { ArgumentBuilder } from '@/components/game/screens/ArgumentBuilder'
-import { VerdictScreen }   from '@/components/game/screens/VerdictScreen'
-import { Debrief }         from '@/components/game/screens/Debrief'
-import { Options }         from '@/components/game/screens/Options'
+import { GameSelect }        from '@/components/game/screens/GameSelect'
+import { MainMenu }          from '@/components/game/screens/MainMenu'
+import { CaseSelect }        from '@/components/game/screens/CaseSelect'
+import { Briefing }          from '@/components/game/screens/Briefing'
+import { Investigation }     from '@/components/game/screens/Investigation'
+import { EmailClientScreen } from '@/components/game/screens/EmailClientScreen'
+import { Trial }             from '@/components/game/screens/Trial'
+import { TrialChat }         from '@/components/game/screens/TrialChat'
+import { ArgumentBuilder }   from '@/components/game/screens/ArgumentBuilder'
+import { VerdictScreen }     from '@/components/game/screens/VerdictScreen'
+import { Debrief }           from '@/components/game/screens/Debrief'
+import { Options }           from '@/components/game/screens/Options'
 
 export default function ComplianceCourtPage() {
   const {
@@ -55,6 +56,15 @@ export default function ComplianceCourtPage() {
 
       {state.screen === 'investigation' && (
         <Investigation state={state} dispatch={dispatch} />
+      )}
+
+      {state.screen === 'email-client' && (
+        <EmailClientScreen
+          state={state}
+          dispatch={dispatch}
+          currentDialogue={currentDialogue}
+          isChoicePoint={isChoicePoint}
+        />
       )}
 
       {state.screen === 'trial' && currentDialogue && state.gameMode === 'visual-novel' && (
