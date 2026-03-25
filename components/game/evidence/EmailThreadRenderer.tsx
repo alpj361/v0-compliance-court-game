@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { EmailThreadMeta } from '@/lib/gameData'
 import { Mail, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
