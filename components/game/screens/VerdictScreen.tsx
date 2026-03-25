@@ -90,6 +90,28 @@ const OUTCOME_CONFIG = {
     icon: RotateCcw,
     courtRules: 'El Tiempo Expiró',
   },
+  // OTF Case 2 — Comité de Ética outcomes
+  'investigacion-abierta': {
+    label: 'INVESTIGACIÓN ABIERTA',
+    headerColor: 'text-green-400',
+    bannerBg: 'bg-green-900/20 border-green-600/40',
+    icon: BookOpen,
+    courtRules: 'Resolución del Comité de Ética',
+  },
+  'revision-preliminar': {
+    label: 'REVISIÓN PRELIMINAR',
+    headerColor: 'text-amber-400',
+    bannerBg: 'bg-amber-900/20 border-amber-600/40',
+    icon: BookOpen,
+    courtRules: 'Resolución del Comité de Ética',
+  },
+  'caso-archivado': {
+    label: 'CASO ARCHIVADO',
+    headerColor: 'text-court-grey',
+    bannerBg: 'bg-court-navy-mid border-border',
+    icon: RotateCcw,
+    courtRules: 'Resolución del Comité de Ética',
+  },
 }
 
 export function VerdictScreen({ state, dispatch, verdictData }: VerdictScreenProps) {

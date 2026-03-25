@@ -6,7 +6,7 @@
 import { useReducer, useCallback, useEffect, useState } from 'react'
 import type { Case, Scene, DialogueLine, GameId, HearingMessage } from '@/lib/gameData'
 import { case1, case2 } from '@/lib/gameData'
-import { otfCase1 } from '@/lib/otfGameData'
+import { otfCase1, otfCase2 } from '@/lib/otfGameData'
 
 // ── Persistence ───────────────────────────────────────────────────────────────
 
@@ -14,6 +14,7 @@ const CASES_MAP: Record<string, Case> = {
   'case-1': case1,
   'case-2': case2,
   'otf-1': otfCase1,
+  'otf-2': otfCase2,
 }
 const SAVE_KEY     = 'compliance-court-v1'
 const SAVE_VER     = 3

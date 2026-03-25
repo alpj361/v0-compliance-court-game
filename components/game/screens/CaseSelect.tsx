@@ -21,6 +21,7 @@ export function CaseSelect({ state, dispatch }: CaseSelectProps) {
     if (caseId === 'case-1') return state.case1Complete
     if (caseId === 'case-2') return state.case2Complete
     if (caseId === 'otf-1') return state.otf1Complete
+    if (caseId === 'otf-2') return state.otf2Complete
     return false
   }
 
