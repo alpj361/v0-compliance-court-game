@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Case } from '@/lib/gameData'
+import { otfCase2 } from '@/lib/cases/otf-case2'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // OTF CASE 1: LA LLAMADA
@@ -593,4 +594,5 @@ export const otfCase1: Case = {
   },
 }
 
-export const OTF_CASES: Case[] = [otfCase1]
+export const OTF_CASES: Case[] = [otfCase1, otfCase2]
+export { otfCase2 }

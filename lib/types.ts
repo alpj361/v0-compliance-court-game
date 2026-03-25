@@ -36,18 +36,27 @@ export type Portrait =
   | 'vargas-agent-pressing'
   | 'mendoza-friendly'
   | 'mendoza-threatening'
+  // Ethics Committee (OTF Case 2)
+  | 'paz-herrera-neutral'
+  | 'fernando-rojo-neutral'
+  | 'clara-mendoza-neutral'
+  | 'marco-valdes-neutral'
+  | 'lupita-morales-neutral'
+  | 'salinas-rrhh-neutral'
 
 export type CharacterSide = 'left' | 'right' | 'center'
 
 // ── Evidence types ────────────────────────────────────────────────────────────
 export type EvidenceDisplayType =
-  | 'email'          // renders as full email UI
-  | 'bank-record'    // renders as bank system terminal printout
-  | 'legal-text'     // renders as official document / gazette
-  | 'paper-doc'      // renders as scanned paper / memo / certificate
-  | 'coaching-log'   // renders as signed coaching form
-  | 'call-report'    // renders as QA call monitoring spreadsheet
-  | 'video'          // renders as an inline video player
+  | 'email'            // renders as full email UI
+  | 'bank-record'      // renders as bank system terminal printout
+  | 'legal-text'       // renders as official document / gazette
+  | 'paper-doc'        // renders as scanned paper / memo / certificate
+  | 'coaching-log'     // renders as signed coaching form
+  | 'call-report'      // renders as QA call monitoring spreadsheet
+  | 'video'            // renders as an inline video player
+  | 'employee-profile' // renders as employee HR profile card (email client cases)
+  | 'email-thread'     // renders as chained email conversation
 
 export interface EmailMeta {
   from: string
@@ -116,6 +125,47 @@ export interface VideoMeta {
   poster?: string       // optional poster image path
 }
 
+// ── Email-client case types ───────────────────────────────────────────────────
+
+export interface EmployeeProfileMeta {
+  employeeId: string
+  name: string
+  role: string
+  department: string
+  yearsInCompany: number
+  hireDate: string
+  status: 'active' | 'suspended' | 'under-review'
+  photo?: string  // portrait key
+  stats: { label: string; value: string; flag?: 'positive' | 'negative' | 'neutral' | 'warning' }[]
+  timeline: { date: string; event: string; type: 'positive' | 'negative' | 'neutral' | 'warning' }[]
+  hrNotes?: string
+  confidential?: boolean
+}
+
+export interface EmailThreadMeta {
+  subject: string
+  participants: string[]
+  emails: {
+    id: string
+    from: string
+    to: string
+    date: string
+    body: string
+    isHighlighted?: boolean
+    highlightNote?: string
+  }[]
+}
+
+/** Chat message accumulated during the ethics committee hearing */
+export interface HearingMessage {
+  id: string
+  sender: string                              // display name
+  senderRole: 'committee' | 'player' | 'system'
+  text: string
+  timestamp: string                           // e.g. "10:02"
+  attachments?: string[]                      // evidence IDs shown as attachments
+}
+
 export interface EvidenceCard {
   id: string
   title: string
@@ -132,6 +182,10 @@ export interface EvidenceCard {
   coachingLogMeta?: CoachingLogMeta
   callReportMeta?: CallReportMeta
   videoMeta?: VideoMeta
+  employeeProfileMeta?: EmployeeProfileMeta
+  emailThreadMeta?: EmailThreadMeta
+  // Email client folder organization (for cases with useEmailClient: true)
+  emailFolder?: 'inbox' | 'archive' | 'profiles'
 }
 
 export interface DialogueLine {
@@ -195,10 +249,22 @@ export interface Scene {
   legalAdvisorNote?: string
   // Optional video URL shown in the LegalAdvisorButton modal
   legalAdvisorVideoUrl?: string
+  // Hearing mode: this scene plays as a chat message from a committee member
+  isHearingScene?: boolean
+  // Hearing mode: player can attach evidence alongside their text response
+  hearingEvidenceBonus?: {
+    correctIds: string[]
+    bonus: number
+    penalty: number
+    feedback: string
+  }
 }
 
 export interface VerdictData {
-  outcome: 'guilty' | 'guilty-reduced' | 'acquitted' | 'null-trial' | 'postponed' | 'lesson' | 'acuerdo' | 'tension-controlada' | 'sacrificio' | 'crisis' | 'sin-tiempo'
+  outcome:
+    | 'guilty' | 'guilty-reduced' | 'acquitted' | 'null-trial' | 'postponed' | 'lesson'
+    | 'acuerdo' | 'tension-controlada' | 'sacrificio' | 'crisis' | 'sin-tiempo'
+    | 'investigacion-abierta' | 'revision-preliminar' | 'caso-archivado'
   title: string
   subtitle: string
   lessonTitle: string
@@ -241,4 +307,10 @@ export interface Case {
   verdictRoutes?: { minCredibility: number; sceneId: string }[]
   // Scene to show if the 15-minute trial timer expires
   postponedSceneId?: string
+  // Email client mode (OTF Case 2+): replaces Investigation + Trial with email client UI
+  useEmailClient?: boolean
+  // Override starting credibility (default 100; email cases may start lower)
+  initialCredibility?: number
+  // Scene ID where the ethics committee hearing begins
+  hearingStartId?: string
 }
