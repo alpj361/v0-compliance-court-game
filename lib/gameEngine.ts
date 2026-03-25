@@ -284,7 +284,7 @@ const initialState: GameState = {
   isWrongAnswerShaking: false,
   wrongAnswerMessage: null,
   isDialogueComplete: false,
-  playerName: 'Nicolas',
+  playerName: 'Damián',
   currentGame: null,
   case1Complete: false,
   case2Complete: false,

@@ -57,9 +57,10 @@ export function Briefing({ state, dispatch }: BriefingProps) {
           </div>
           <div>
             <div className="text-xs font-mono tracking-wider uppercase text-muted-foreground">
-              {isOTF ? 'Tu Rol' : 'Your Role'}
+              {isOTF ? 'Damián García' : 'Your Role'}
             </div>
             <div className="text-sm font-serif font-semibold text-foreground mt-0.5">
+              {isOTF ? `Rol: ${activeCase.roleLabel}` : `Nicolas — ${activeCase.roleLabel}`}
               {activeCase.useEmailClient
                 ? activeCase.roleLabel
                 : isOTF

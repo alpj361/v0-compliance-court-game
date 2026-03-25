@@ -218,7 +218,7 @@ export function MainMenu({ currentGame, hasSavedGame, onContinue, onNewGame, onO
         </div>
 
         <p className="text-xs text-muted-foreground font-mono">
-          {isOTF ? 'Asistente Técnico — Guatemala City FC' : 'Player: Nicolas — Banking Agent & Law Student'}
+          {isOTF ? 'Damián García — Asistente Técnico, Guatemala City FC' : 'Player: Nicolas — Banking Agent & Law Student'}
         </p>
       </div>
 
