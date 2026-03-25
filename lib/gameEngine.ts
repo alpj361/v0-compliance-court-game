@@ -422,6 +422,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         activeCase: action.payload,
+        playerName: action.payload.playerName ?? state.playerName,
         currentSceneId: action.payload.firstSceneId,
         currentDialogueIndex: 0,
         credibility: action.payload.initialCredibility ?? 100,

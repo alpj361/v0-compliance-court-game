@@ -17,6 +17,7 @@ export const otfCase1: Case = {
   subtitle: 'Vestuario — Guatemala City, Guatemala',
   jurisdiction: 'Guatemala',
   roleLabel: 'Asistente Técnico',
+  playerName: 'Damian Garcia',
 
   briefing:
     '15 minutos antes del partido decisivo. Marco Reyes, el delantero estrella del equipo, ' +
