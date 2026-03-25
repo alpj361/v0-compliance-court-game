@@ -351,7 +351,7 @@ export type GameAction =
   | { type: 'JOIN_HEARING' }
   | { type: 'ADVANCE_HEARING_DIALOGUE'; payload: HearingMessage }
   | { type: 'TOGGLE_HEARING_ATTACHMENT'; payload: string }
-  | { type: 'SEND_HEARING_RESPONSE'; payload: { message: HearingMessage; isCorrect: boolean; penalty?: number; nextSceneId?: string; evidenceBonus?: number; evidencePenalty?: number } }
+  | { type: 'SEND_HEARING_RESPONSE'; payload: { message: HearingMessage; isCorrect: boolean; penalty?: number; nextSceneId?: string; evidenceBonus?: number; evidencePenalty?: number; feedback?: string } }
   | { type: 'SET_OTF2_CASE_COMPLETE'; payload: { complete: boolean } }
 
 function getCurrentScene(state: GameState): Scene | null {
@@ -1145,6 +1145,19 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           const base = { ...state, hearingLog: newLog, otf2Complete: true }
           return navigateToVerdict(base, scene.nextSceneId)
         }
+        // Auto-resolve credibility router scenes with no dialogues
+        if (nextScene.isCredibilityRouterScene && nextScene.dialogues.length === 0 && nextScene.credibilityRoutes?.length) {
+          const routes = [...nextScene.credibilityRoutes].sort((a, b) => b.minCredibility - a.minCredibility)
+          const route = routes.find(r => state.credibility >= r.minCredibility)
+          const routeId = route?.sceneId ?? nextScene.nextSceneId
+          if (routeId && state.activeCase?.scenes[routeId]) {
+            const routeScene = state.activeCase.scenes[routeId]
+            if (routeScene.isVerdictScene) {
+              return navigateToVerdict({ ...state, hearingLog: newLog, otf2Complete: true }, routeId)
+            }
+            return { ...state, hearingLog: newLog, currentSceneId: routeId, currentDialogueIndex: 0, isDialogueComplete: false }
+          }
+        }
         return { ...state, hearingLog: newLog, currentSceneId: scene.nextSceneId, currentDialogueIndex: 0, isDialogueComplete: false }
       }
       return { ...state, hearingLog: newLog }
@@ -1158,7 +1171,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'SEND_HEARING_RESPONSE': {
-      const { message, isCorrect, penalty, nextSceneId, evidenceBonus, evidencePenalty } = action.payload
+      const { message, isCorrect, penalty, nextSceneId, evidenceBonus, evidencePenalty, feedback } = action.payload
       // Calculate attachment bonus/penalty
       const scene = getCurrentScene(state)
       const bonusCfg = scene?.hearingEvidenceBonus
@@ -1180,13 +1193,26 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         hearingLog: newLog,
         pendingHearingAttachments: new Set<string>(),
         isWrongAnswerShaking: !isCorrect,
-        wrongAnswerMessage: !isCorrect ? (action.payload.message.text) : null,
+        wrongAnswerMessage: !isCorrect ? (feedback ?? 'Respuesta incorrecta. El Comité toma nota.') : null,
       }
 
       if (!targetSceneId || !state.activeCase?.scenes[targetSceneId]) return baseState
       const nextScene = state.activeCase.scenes[targetSceneId]
       if (nextScene.isVerdictScene) {
         return navigateToVerdict({ ...baseState, otf2Complete: true }, targetSceneId)
+      }
+      // Auto-resolve credibility router scenes with no dialogues
+      if (nextScene.isCredibilityRouterScene && nextScene.dialogues.length === 0 && nextScene.credibilityRoutes?.length) {
+        const routes = [...nextScene.credibilityRoutes].sort((a, b) => b.minCredibility - a.minCredibility)
+        const route = routes.find(r => newCredibility >= r.minCredibility)
+        const routeId = route?.sceneId ?? nextScene.nextSceneId
+        if (routeId && state.activeCase?.scenes[routeId]) {
+          const routeScene = state.activeCase.scenes[routeId]
+          if (routeScene.isVerdictScene) {
+            return navigateToVerdict({ ...baseState, otf2Complete: true }, routeId)
+          }
+          return { ...baseState, currentSceneId: routeId, currentDialogueIndex: 0, isDialogueComplete: false }
+        }
       }
       return { ...baseState, currentSceneId: targetSceneId, currentDialogueIndex: 0, isDialogueComplete: false }
     }

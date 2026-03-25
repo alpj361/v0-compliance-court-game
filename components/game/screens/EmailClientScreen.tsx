@@ -265,6 +265,7 @@ function HearingChat({
         isCorrect: choice.isCorrect,
         penalty: choice.wrongPenalty,
         nextSceneId: choice.nextSceneId,
+        feedback: choice.feedback,
       },
     })
     setShowAttachPanel(false)
@@ -571,9 +572,9 @@ export function EmailClientScreen({
         )}
         <div className="flex items-center gap-1.5 text-[10px] text-court-grey font-mono">
           <div className="w-5 h-5 rounded-full bg-blue-800/40 border border-blue-600/40 flex items-center justify-center text-[9px] text-blue-300 font-bold">
-            N
+            {activeCase.roleLabel.split('—').pop()?.trim()[0] ?? 'D'}
           </div>
-          <span>Lider de Archivo</span>
+          <span>{activeCase.roleLabel.split('—')[0].trim()}</span>
         </div>
       </header>
 
